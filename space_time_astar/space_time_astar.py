@@ -16,6 +16,10 @@ class SpaceTimeAstar:
             raise ValueError(
                 f"Dimension does not match the length of goal: {goal_point}"
             )
+        if not self.is_valid_point(start_point, 0):
+            raise ValueError(f"Start point is not valid: {start_point}")
+        if not self.is_valid_point(goal_point, 0):
+            raise ValueError(f"Goal point is not valid: {goal_point}")
 
     def plan(self):
         open_set: Set[Node] = set()
@@ -65,9 +69,9 @@ class SpaceTimeAstar:
                 neighbor_point[i] += j
                 if self.is_valid_point(neighbor_point, node.time + 1):
                     neighbors.append(Node(neighbor_point, node.time + 1))
-            # wait action
-            if self.is_valid_point(node.point, node.time + 1):
-                neighbors.append(Node(node.point, node.time + 1))
+        # wait action
+        if self.is_valid_point(node.point, node.time + 1):
+            neighbors.append(Node(node.point, node.time + 1))
         return neighbors
 
     def is_valid_point(self, point: List[int], time: int) -> bool:
@@ -80,6 +84,6 @@ class SpaceTimeAstar:
 
     def is_valid_space(self, point: List[int]) -> bool:
         for i in range(self.env.dimension):
-            if point[i] < 0 or point[i] > self.env.space_limit[i]:
+            if point[i] < 0 or point[i] >= self.env.space_limit[i]:
                 return False
         return True
