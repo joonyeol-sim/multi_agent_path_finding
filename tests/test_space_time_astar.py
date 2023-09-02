@@ -108,12 +108,8 @@ class TestSpaceTimeAstar:
     def test_dynamic_obstacle_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 30) for _ in range(dimension)]
-            start_point = [
-                random.randint(0, space_limits[i] - 1) for i in range(dimension)
-            ]
-            goal_point = [
-                random.randint(0, space_limits[i] - 1) for i in range(dimension)
-            ]
+            start_point = [0 for _ in range(dimension)]
+            goal_point = [space_limits[i] - 1 for i in range(dimension)]
             dynamic_obstacles = []
             num_of_cells = 1
             for i in range(dimension):
