@@ -44,7 +44,7 @@ class SpaceTimeAstar:
         return sum([abs(node.point[i] - self.goal_point[i]) for i in range(self.env.dimension)])
 
     @staticmethod
-    def reconstruct_path(node: Node) -> list[tuple[list[int], int]]:
+    def reconstruct_path(node: Node) -> List[tuple[List[int], int]]:
         path: List[Tuple[List[int], int]] = [(node.point, node.time)]
         while node.parent is not None:
             path.append((node.parent.point, node.parent.time))
