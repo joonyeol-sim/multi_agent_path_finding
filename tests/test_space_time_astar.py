@@ -32,14 +32,17 @@ class TestSpaceTimeAstar:
         start_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
         goal_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
         static_obstacles = [
-            [start_point[0], start_point[1]],
             [start_point[0] + 1, start_point[1]],
             [start_point[0] - 1, start_point[1]],
             [start_point[0], start_point[1] + 1],
             [start_point[0], start_point[1] - 1],
         ]
+        dynamic_obstacles = [([start_point[0], start_point[1]], [1, -1])]
         env = Environment(
-            dimension=2, space_limit=[max_x, max_y], static_obstacles=static_obstacles
+            dimension=2,
+            space_limit=[max_x, max_y],
+            static_obstacles=static_obstacles,
+            dynamic_obstacles=dynamic_obstacles,
         )
         astar = SpaceTimeAstar(start_point=start_point, goal_point=goal_point, env=env)
         path = astar.plan()
@@ -107,3 +110,65 @@ class TestSpaceTimeAstar:
             for obstacle in dynamic_obstacles:
                 if obstacle[1][0] <= node[1] <= obstacle[1][1]:
                     assert node[0] != obstacle[0]
+
+    def test_point_is_in_invalid_area(self):
+        max_x = random.randint(2, 100)
+        max_y = random.randint(2, 100)
+        env = Environment(dimension=2, space_limit=[max_x, max_y])
+
+        # start point is out of bounds
+        goal_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
+        start_point = [-1, -1]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
+
+        start_point = [max_x, max_y]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
+
+        # goal point is out of bounds
+        start_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
+        goal_point = [-1, -1]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
+
+        goal_point = [max_x, max_y]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
+
+    def test_dimension_does_not_match(self):
+        max_x = random.randint(2, 100)
+        max_y = random.randint(2, 100)
+        env = Environment(dimension=2, space_limit=[max_x, max_y])
+
+        # start point does not match dimension
+        goal_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
+        start_point = [
+            random.randint(0, max_x - 1),
+            random.randint(0, max_y - 1),
+            random.randint(0, max_y - 1),
+        ]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
+
+        # goal point does not match dimension
+        start_point = [random.randint(0, max_x - 1), random.randint(0, max_y - 1)]
+        goal_point = [
+            random.randint(0, max_x - 1),
+            random.randint(0, max_y - 1),
+            random.randint(0, max_y - 1),
+        ]
+        with pytest.raises(ValueError):
+            astar = SpaceTimeAstar(
+                start_point=start_point, goal_point=goal_point, env=env
+            )
