@@ -82,10 +82,12 @@ class TestSpaceTimeAstar:
             for i in range(1, space_limits[0] - 1):
                 for j in range(1, space_limits[1] - 1):
                     if dimension == 2:
-                        static_obstacles.append([i, j])
+                        if random.random() < 0.5:
+                            static_obstacles.append([i, j])
                     else:
                         for k in range(1, space_limits[2] - 1):
-                            static_obstacles.append([i, j, k])
+                            if random.random() < 0.5:
+                                static_obstacles.append([i, j, k])
             env = Environment(
                 dimension=dimension,
                 space_limit=space_limits,
