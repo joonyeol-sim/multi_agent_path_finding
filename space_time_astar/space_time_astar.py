@@ -1,7 +1,6 @@
 from typing import List, Set, Tuple
-from Node import Node
-from Environment import Environment
-import yaml
+from space_time_astar.node import Node
+from space_time_astar.environment import Environment
 
 
 class SpaceTimeAstar:
@@ -10,9 +9,13 @@ class SpaceTimeAstar:
         self.start_point = start_point
         self.goal_point = goal_point
         if env.dimension != len(start_point):
-            raise ValueError(f"Dimension does not match the length of start: {start_point}")
+            raise ValueError(
+                f"Dimension does not match the length of start: {start_point}"
+            )
         if env.dimension != len(goal_point):
-            raise ValueError(f"Dimension does not match the length of goal: {goal_point}")
+            raise ValueError(
+                f"Dimension does not match the length of goal: {goal_point}"
+            )
 
     def plan(self):
         open_set: Set[Node] = set()
@@ -41,7 +44,9 @@ class SpaceTimeAstar:
 
     def heuristic(self, node) -> int:
         # return manhattan distance
-        return sum([abs(node.point[i] - self.goal_point[i]) for i in range(self.env.dimension)])
+        return sum(
+            [abs(node.point[i] - self.goal_point[i]) for i in range(self.env.dimension)]
+        )
 
     @staticmethod
     def reconstruct_path(node: Node) -> List[tuple[List[int], int]]:
@@ -78,33 +83,3 @@ class SpaceTimeAstar:
             if point[i] < 0 or point[i] > self.env.space_limit[i]:
                 return False
         return True
-
-
-if __name__ == '__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', type=str, default='input.yaml', help='Input file path')
-    parser.add_argument('--output', '-o', type=str, default='output.yaml', help='Output file path')
-    args = parser.parse_args()
-
-    with open(args.input, 'r') as stream:
-        input_data = yaml.load(stream, Loader=yaml.FullLoader)
-
-    environment = Environment(input_data["dimension"],
-                              input_data["space_limits"],
-                              input_data["static_obstacles"],
-                              input_data["dynamic_obstacles"],)
-    planner = SpaceTimeAstar(
-        input_data["start_point"],
-        input_data["goal_point"],
-        environment
-    )
-
-    result = planner.plan()
-    if result is None:
-        print("No path found")
-    else:
-        print(*result, sep="\n")
-        # save path to yaml file
-        with open(args.output, 'w') as f:
-            yaml.dump(result, f)

@@ -9,7 +9,7 @@ class Node:
     g_score: int = 0
     h_score: int = 0
     f_score: int = 0
-    parent: 'Node' = None
+    parent: "Node" = None
 
     def __lt__(self, other):
         return self.f_score < other.f_score

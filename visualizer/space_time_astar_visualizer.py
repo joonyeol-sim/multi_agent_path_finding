@@ -65,8 +65,8 @@ def animate(input_data, path_data):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input', '-i', type=str, default='input.yaml', help='Input file path')
-    parser.add_argument('--output', '-o', type=str, default='output.yaml', help='Output file path')
+    parser.add_argument('--input', '-i', type=str, help='Input file path')
+    parser.add_argument('--output', '-o', type=str, help='Output file path')
     args = parser.parse_args()
     with open(args.input, 'r') as stream:
         input_data = yaml.load(stream, Loader=yaml.FullLoader)
