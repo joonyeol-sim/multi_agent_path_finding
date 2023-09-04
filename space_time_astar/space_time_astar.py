@@ -1,7 +1,9 @@
 from typing import List, Set, Tuple
-from space_time_astar.node import Node
+
 from common.environment import Environment
 from common.point import Point
+from common.constraint import Constraint, VertexConstraint, EdgeConstraint
+from space_time_astar.node import Node
 
 
 class SpaceTimeAstar:
@@ -22,7 +24,9 @@ class SpaceTimeAstar:
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
 
-    def plan(self):
+    def plan(
+        self, constraints: List[Constraint] = None
+    ) -> List[Tuple[Point, int]] | None:
         open_set: Set[Node] = set()
         open_set.add(Node(self.start_point, 0))
         while open_set:
@@ -30,7 +34,7 @@ class SpaceTimeAstar:
             open_set.remove(current)
             if current.point == self.goal_point:
                 return self.reconstruct_path(current)
-            neighbors = self.get_neighbors(current)
+            neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
                 if neighbor not in open_set:
                     open_set.add(neighbor)
@@ -59,15 +63,25 @@ class SpaceTimeAstar:
             node = node.parent
         return path[::-1]
 
-    def get_neighbors(self, node: Node) -> List[Node]:
+    def get_neighbors(
+        self, node: Node, constraints: List[Constraint] = None
+    ) -> List[Node]:
         neighbors: List[Node] = []
         # move action
         for neighbor_point in node.point.get_neighbor_points():
-            if self.is_valid_point(neighbor_point, node.time + 1):
+            if self.is_valid_point(
+                neighbor_point, node.time + 1
+            ) and self.is_valid_given_constraints(
+                node.point, neighbor_point, node.time + 1, constraints
+            ):
                 neighbors.append(Node(neighbor_point, node.time + 1))
 
         # wait action
-        if self.is_valid_point(node.point, node.time + 1):
+        if self.is_valid_point(
+            node.point, node.time + 1
+        ) and self.is_valid_given_constraints(
+            node.point, node.point, node.time + 1, constraints
+        ):
             neighbors.append(Node(node.point, node.time + 1))
         return neighbors
 
@@ -77,6 +91,27 @@ class SpaceTimeAstar:
         for obstacle in self.env.obstacles:
             if obstacle.is_colliding(point=point, time=time):
                 return False
+        return True
+
+    @staticmethod
+    def is_valid_given_constraints(
+        prev_point: Point,
+        next_point: Point,
+        time: int,
+        constraints: List[Constraint],
+    ) -> bool:
+        if constraints is not None:
+            for constraint in constraints:
+                if isinstance(constraint, VertexConstraint):
+                    if constraint.point == prev_point and constraint.time == time:
+                        return False
+                elif isinstance(constraint, EdgeConstraint):
+                    if (
+                        constraint.points[0] == next_point
+                        and constraint.points[1] == prev_point
+                        and constraint.time == time
+                    ):
+                        return False
         return True
 
     def is_valid_space(self, point: Point) -> bool:
