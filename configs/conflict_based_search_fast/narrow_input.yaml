@@ -1,0 +1,16 @@
+dimension: 2
+dynamic_obstacles: []
+goal_points:
+- - 0
+  - 0
+- - 2
+  - 0
+space_limits:
+- 3
+- 2
+start_points:
+- - 2
+  - 0
+- - 0
+  - 0
+static_obstacles: []
