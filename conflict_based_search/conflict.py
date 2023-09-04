@@ -6,17 +6,18 @@ from common.point import Point
 
 @dataclass
 class Conflict(ABC):
-    time: int
     agent_ids: List[int]
 
 
 @dataclass
 class VertexConflict(Conflict):
+    time: int
     point: Point
 
 
 @dataclass
 class EdgeConflict(Conflict):
+    times: Tuple[int, int]
     # The first point is the previous point
     # The second point is the next point
     # points: {

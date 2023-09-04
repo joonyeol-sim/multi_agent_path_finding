@@ -55,7 +55,8 @@ class ConflictBasedSearch:
 
                 new_constraints = cur_node.constraints.copy()
                 new_constraints.append(constraint)
-                new_solution = self.individual_planners[agent_id].plan(
+                new_solution = cur_node.solution.copy()
+                new_solution[agent_id] = self.individual_planners[agent_id].plan(
                     constraints=new_constraints
                 )
                 new_cost = self.calculate_cost(new_solution)
@@ -77,7 +78,7 @@ class ConflictBasedSearch:
             return EdgeConstraint(
                 agent_id=agent_id,
                 points=conflict.points[agent_id],
-                time=conflict.time,
+                times=conflict.times,
             )
         else:
             raise ValueError(f"Unknown conflict type: {type(conflict)}")
@@ -130,5 +131,5 @@ class ConflictBasedSearch:
                             agent1: (prev_point1, next_point1),
                             agent2: (prev_point2, next_point2),
                         },
-                        time=next_time1,
+                        times=(prev_time1, next_time1),
                     )

@@ -72,7 +72,7 @@ class SpaceTimeAstar:
             if self.is_valid_point(
                 neighbor_point, node.time + 1
             ) and self.is_valid_given_constraints(
-                node.point, neighbor_point, node.time + 1, constraints
+                node.point, neighbor_point, node.time, node.time + 1, constraints
             ):
                 neighbors.append(Node(neighbor_point, node.time + 1))
 
@@ -80,7 +80,7 @@ class SpaceTimeAstar:
         if self.is_valid_point(
             node.point, node.time + 1
         ) and self.is_valid_given_constraints(
-            node.point, node.point, node.time + 1, constraints
+            node.point, node.point, node.time, node.time + 1, constraints
         ):
             neighbors.append(Node(node.point, node.time + 1))
         return neighbors
@@ -97,19 +97,21 @@ class SpaceTimeAstar:
     def is_valid_given_constraints(
         prev_point: Point,
         next_point: Point,
-        time: int,
+        prev_time: int,
+        next_time: int,
         constraints: List[Constraint],
     ) -> bool:
         if constraints is not None:
             for constraint in constraints:
                 if isinstance(constraint, VertexConstraint):
-                    if constraint.point == prev_point and constraint.time == time:
+                    if constraint.point == next_point and constraint.time == next_time:
                         return False
                 elif isinstance(constraint, EdgeConstraint):
                     if (
-                        constraint.points[0] == next_point
-                        and constraint.points[1] == prev_point
-                        and constraint.time == time
+                        constraint.points[0] == prev_point
+                        and constraint.points[1] == next_point
+                        and constraint.times[0] == prev_time
+                        and constraint.times[1] == next_time
                     ):
                         return False
         return True
