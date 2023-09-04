@@ -1,4 +1,5 @@
 import yaml
+import time
 from common.environment import Environment
 from common.point import Point
 from space_time_astar.space_time_astar import SpaceTimeAstar
@@ -36,7 +37,9 @@ if __name__ == "__main__":
         environment,
     )
 
+    start_time = time.time()
     result = planner.plan()
+    print(f"Time elapsed: {time.time() - start_time}")
     if result is None:
         print("No path found")
     else:
