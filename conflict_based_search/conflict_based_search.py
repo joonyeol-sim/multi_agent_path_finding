@@ -59,6 +59,8 @@ class ConflictBasedSearch:
                 new_solution[agent_id] = self.individual_planners[agent_id].plan(
                     constraints=new_constraints
                 )
+                if not new_solution[agent_id]:
+                    continue
                 new_cost = self.calculate_cost(new_solution)
                 new_node = CTNode(new_constraints, new_solution, new_cost)
                 self.constraints_tree.put(new_node)
