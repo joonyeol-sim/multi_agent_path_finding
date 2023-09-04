@@ -5,7 +5,7 @@ from itertools import combinations
 
 from common.environment import Environment
 from common.point import Point
-from conflict_based_search.conflict import Conflict, VertexConflict, EdgeConflict
+from common.conflict import Conflict, VertexConflict, EdgeConflict
 from common.constraint import (
     Constraint,
     VertexConstraint,
