@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 from typing import List
+from common.point import Point
 
 
 @dataclass
 class Node:
-    point: List[int]
+    point: Point
     time: int
     g_score: int = 0
     h_score: int = 0
@@ -15,7 +16,7 @@ class Node:
         return self.f_score < other.f_score
 
     def __hash__(self):
-        return hash((tuple(self.point), self.time))
+        return hash((self.point, self.time))
 
     def __eq__(self, other):
         if isinstance(other, Node):

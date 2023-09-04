@@ -1,11 +1,12 @@
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import List, Tuple
+from common.point import Point
 
 
 @dataclass
 class Obstacle(ABC):
-    point: List[int]
+    point: Point
 
     @abstractmethod
     def is_colliding(self, *args, **kwargs) -> bool:
@@ -14,7 +15,7 @@ class Obstacle(ABC):
 
 @dataclass
 class StaticObstacle(Obstacle):
-    def is_colliding(self, point: List[int], **kwargs) -> bool:
+    def is_colliding(self, point: Point, **kwargs) -> bool:
         return point == self.point
 
 
@@ -22,11 +23,7 @@ class StaticObstacle(Obstacle):
 class DynamicObstacle(Obstacle):
     time: Tuple[int, int]
 
-    def __init__(self, point: List[int], time: Tuple[int, int]):
-        super().__init__(point)
-        self.time = time
-
-    def is_colliding(self, point: List[int], time: int = None) -> bool:
+    def is_colliding(self, point: Point, time: int = None) -> bool:
         is_in_time_range = (
             self.time[0] <= time <= self.time[1]
             if self.time[1] != -1

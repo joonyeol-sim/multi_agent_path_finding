@@ -1,5 +1,6 @@
 from typing import List, Tuple
-from space_time_astar.obstacle import StaticObstacle, DynamicObstacle, Obstacle
+from common.obstacle import StaticObstacle, DynamicObstacle, Obstacle
+from common.point import Point
 
 
 class Environment:
@@ -7,8 +8,8 @@ class Environment:
         self,
         dimension: int,
         space_limit: List[int],
-        static_obstacles: List[List[int]] = None,
-        dynamic_obstacles: List[Tuple[List[int], List[int]]] = None,
+        static_obstacles: List[Point] = None,
+        dynamic_obstacles: List[Tuple[Point, List[int]]] = None,
     ):
         self.dimension = dimension
         self.space_limit = space_limit
@@ -20,14 +21,14 @@ class Environment:
         self.obstacles: List[Obstacle] = []
         if static_obstacles is not None:
             for static_obstacle in static_obstacles:
-                if self.dimension != len(static_obstacle):
+                if self.dimension != len(static_obstacle.__dict__.keys()):
                     raise ValueError(
                         f"Dimension does not match the length of static obstacle: {static_obstacle}"
                     )
                 self.obstacles.append(StaticObstacle(static_obstacle))
         if dynamic_obstacles is not None:
             for dynamic_obstacle in dynamic_obstacles:
-                if self.dimension != len(dynamic_obstacle[0]):
+                if self.dimension != len(dynamic_obstacle[0].__dict__.keys()):
                     raise ValueError(
                         f"Dimension does not match the length of dynamic obstacle: {dynamic_obstacle}"
                     )
