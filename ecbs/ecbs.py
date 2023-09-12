@@ -11,7 +11,7 @@ from common.constraint import (
     VertexConstraint,
     EdgeConstraint,
 )
-from ecbs.constraint_tree_node import CTNode
+from ecbs.ct_node import CTNode
 from stastar.space_time_astar import SpaceTimeAstar
 
 

@@ -2,7 +2,9 @@ import yaml
 import time
 from common.environment import Environment
 from common.point import Point
-from cbs.conflict_based_search import ConflictBasedSearch
+from cbs_tree.cbs_tree import (
+    ConflictBasedSearchFast,
+)
 
 if __name__ == "__main__":
     import argparse
@@ -33,7 +35,7 @@ if __name__ == "__main__":
 
     start_points = [Point(*start_point) for start_point in input_data["start_points"]]
     goal_points = [Point(*goal_point) for goal_point in input_data["goal_points"]]
-    planner = ConflictBasedSearch(
+    planner = ConflictBasedSearchFast(
         start_points,
         goal_points,
         environment,
