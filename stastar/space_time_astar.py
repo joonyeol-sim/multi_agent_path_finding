@@ -3,7 +3,7 @@ from typing import List, Set, Tuple
 from common.environment import Environment
 from common.point import Point
 from common.constraint import Constraint, VertexConstraint, EdgeConstraint
-from space_time_astar.node import Node
+from stastar.node import Node
 
 
 class SpaceTimeAstar:

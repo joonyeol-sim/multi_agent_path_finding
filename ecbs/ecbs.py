@@ -11,8 +11,8 @@ from common.constraint import (
     VertexConstraint,
     EdgeConstraint,
 )
-from conflict_based_search.constraint_tree_node import CTNode
-from space_time_astar.space_time_astar import SpaceTimeAstar
+from ecbs.constraint_tree_node import CTNode
+from stastar.space_time_astar import SpaceTimeAstar
 
 
 class ConflictBasedSearch:

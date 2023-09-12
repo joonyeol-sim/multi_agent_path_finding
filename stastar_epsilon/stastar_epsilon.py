@@ -3,14 +3,17 @@ from typing import List, Set, Tuple
 from common.environment import Environment
 from common.point import Point
 from common.constraint import Constraint, VertexConstraint, EdgeConstraint
-from space_time_astar.node import Node
+from stastar_epsilon.node import Node
 
 
-class SpaceTimeAstar:
-    def __init__(self, start_point: Point, goal_point: Point, env: Environment):
+class SpaceTimeAstarEpsilon:
+    def __init__(
+        self, start_point: Point, goal_point: Point, env: Environment, w: float
+    ):
         self.env = env
         self.start_point = start_point
         self.goal_point = goal_point
+        self.w = w
         if env.dimension != len(start_point.__dict__.keys()):
             raise ValueError(
                 f"Dimension does not match the length of start: {start_point}"

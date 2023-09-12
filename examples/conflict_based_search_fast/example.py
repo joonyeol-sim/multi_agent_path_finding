@@ -2,7 +2,7 @@ import yaml
 import time
 from common.environment import Environment
 from common.point import Point
-from conflict_based_search_fast.conflict_based_search_fast import (
+from cbs_tree.conflict_based_search_fast import (
     ConflictBasedSearchFast,
 )
 

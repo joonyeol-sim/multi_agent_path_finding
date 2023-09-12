@@ -2,7 +2,7 @@ import yaml
 import time
 from common.environment import Environment
 from common.point import Point
-from conflict_based_search.conflict_based_search import ConflictBasedSearch
+from cbs.conflict_based_search import ConflictBasedSearch
 
 if __name__ == "__main__":
     import argparse
