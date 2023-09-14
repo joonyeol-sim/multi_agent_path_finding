@@ -1,8 +1,8 @@
 from typing import List, Set, Tuple
 
+from common.constraint import Constraint, VertexConstraint, EdgeConstraint
 from common.environment import Environment
 from common.point import Point
-from common.constraint import Constraint, VertexConstraint, EdgeConstraint
 from stastar_epsilon.node import Node
 
 
@@ -14,6 +14,11 @@ class SpaceTimeAstarEpsilon:
         self.start_point = start_point
         self.goal_point = goal_point
         self.w = w
+
+        self.open_set: Set[Node] = set()
+        self.focal_set: Set[Node] = set()
+        self.closed_set: Set[Node] = set()
+
         if env.dimension != len(start_point.__dict__.keys()):
             raise ValueError(
                 f"Dimension does not match the length of start: {start_point}"
@@ -29,11 +34,7 @@ class SpaceTimeAstarEpsilon:
 
     def plan(
         self, constraints: List[Constraint] = None
-    ) -> tuple[list[tuple[Point, int]], int] | None:
-        open_set: Set[Node] = set()
-        focal_set: Set[Node] = set()
-        closed_set: Set[Node] = set()
-
+    ) -> Tuple[List[Tuple[Point, int]], int] | None:
         start_node = Node(self.start_point, 0)
         start_node.parent = None
         start_node.g_score = 0
@@ -41,37 +42,37 @@ class SpaceTimeAstarEpsilon:
         start_node.f_score = start_node.g_score + start_node.h_score
         start_node.d_score = 0
 
-        open_set.add(start_node)
-        focal_set.add(start_node)
+        self.open_set.add(start_node)
+        self.focal_set.add(start_node)
         min_f_score = start_node.f_score
 
-        while open_set:
+        while self.open_set:
             # update focal set if min_f_score has increased
-            new_min_f_score = min([node.f_score for node in open_set])
+            new_min_f_score = min([node.f_score for node in self.open_set])
             if min_f_score < new_min_f_score:
-                for node in open_set:
+                for node in self.open_set:
                     if self.w * min_f_score <= node.f_score <= self.w * new_min_f_score:
-                        focal_set.add(node)
+                        self.focal_set.add(node)
                 min_f_score = new_min_f_score
 
             # select node from focal set
-            current = min(focal_set)
-            open_set.remove(current)
-            focal_set.remove(current)
-            closed_set.add(current)
+            current = min(self.focal_set)
+            self.open_set.remove(current)
+            self.focal_set.remove(current)
+            self.closed_set.add(current)
 
             # check if current node is at goal
             if current.point == self.goal_point:
-                return self.reconstruct_path(current), min(open_set).f_score
+                return self.reconstruct_path(current), min_f_score
 
             # get neighbors
             neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
-                if neighbor in closed_set:
+                if neighbor in self.closed_set:
                     continue
 
-                if neighbor not in open_set:
-                    open_set.add(neighbor)
+                if neighbor not in self.open_set:
+                    self.open_set.add(neighbor)
                     neighbor.parent = current
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
@@ -80,7 +81,7 @@ class SpaceTimeAstarEpsilon:
                         neighbor
                     ) + self.focal_edge_heuristic(current, neighbor)
                     if neighbor.f_score <= self.w * min_f_score:
-                        focal_set.add(neighbor)
+                        self.focal_set.add(neighbor)
 
                 if current.g_score + 1 < neighbor.g_score:
                     neighbor.parent = current
