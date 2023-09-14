@@ -1,5 +1,6 @@
-from queue import PriorityQueue
+from heapq import heappush, heappop
 from typing import List, Tuple
+from copy import deepcopy
 from itertools import combinations
 
 
@@ -30,40 +31,43 @@ class ConflictBasedSearch:
         self.robot_num = len(start_points)
         self.env = env
 
-        self.constraints_tree = PriorityQueue()
+        self.open_set: List[CTNode] = []
         self.individual_planners = [
             SpaceTimeAstar(start_point, goal_point, env)
             for start_point, goal_point in zip(start_points, goal_points)
         ]
 
     def plan(self):
-        constraints: List[Constraint] = []
-        solution: List[List[Tuple[Point, int]]] = [
-            self.individual_planners[i].plan()
-            for i in range(len(self.individual_planners))
-        ]
-        cost: int = self.calculate_cost(solution)
-        root_node = CTNode(constraints, solution, cost)
-        self.constraints_tree.put(root_node)
-        while not self.constraints_tree.empty():
-            cur_node = self.constraints_tree.get()
+        root_node = CTNode(
+            constraints=[],
+            solution=[],
+            cost=0,
+        )
+        for agent_id, individual_planner in enumerate(self.individual_planners):
+            path = individual_planner.plan()
+            if not path:
+                print(f"Agent {agent_id} failed to find a path")
+                return None
+            root_node.solution.append(path)
+
+        root_node.cost = self.calculate_cost(root_node.solution)
+        heappush(self.open_set, root_node)
+        while self.open_set:
+            cur_node = heappop(self.open_set)
             conflict = self.find_first_conflict(cur_node.solution)
             if not conflict:
                 return cur_node.solution
             for agent_id in conflict.agent_ids:
+                new_node = deepcopy(cur_node)
                 constraint = self.generate_constraint_from_conflict(agent_id, conflict)
-
-                new_constraints = cur_node.constraints.copy()
-                new_constraints.append(constraint)
-                new_solution = cur_node.solution.copy()
-                new_solution[agent_id] = self.individual_planners[agent_id].plan(
-                    constraints=new_constraints
+                new_node.constraints.append(constraint)
+                new_node.solution[agent_id] = self.individual_planners[agent_id].plan(
+                    constraints=new_node.constraints
                 )
-                if not new_solution[agent_id]:
+                if not new_node.solution[agent_id]:
                     continue
-                new_cost = self.calculate_cost(new_solution)
-                new_node = CTNode(new_constraints, new_solution, new_cost)
-                self.constraints_tree.put(new_node)
+                new_node.cost = self.calculate_cost(new_node.solution)
+                heappush(self.open_set, new_node)
         return None
 
     @staticmethod
