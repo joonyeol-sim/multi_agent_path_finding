@@ -1,0 +1,19 @@
+dimension: 2
+space_limits: [10, 10]
+static_obstacles:
+  - [1, 1]
+  - [2, 2]
+  - [3, 3]
+dynamic_obstacles:
+  - - [0, 1]
+    - [0, 2]
+  - - [1, 0]
+    - [0, 2]
+  - - [1, 2]
+    - [1, -1]
+  - - [0, 4]
+    - [1, -1]
+  - - [2, 0]
+    - [3, -1]
+start_point: [0, 0]
+goal_point: [9, 9]

@@ -29,34 +29,100 @@ class SpaceTimeAstarEpsilon:
 
     def plan(
         self, constraints: List[Constraint] = None
-    ) -> List[Tuple[Point, int]] | None:
+    ) -> tuple[list[tuple[Point, int]], int] | None:
         open_set: Set[Node] = set()
-        open_set.add(Node(self.start_point, 0))
+        focal_set: Set[Node] = set()
+        closed_set: Set[Node] = set()
+
+        start_node = Node(self.start_point, 0)
+        start_node.parent = None
+        start_node.g_score = 0
+        start_node.h_score = self.heuristic(start_node)
+        start_node.f_score = start_node.g_score + start_node.h_score
+        start_node.d_score = 0
+
+        open_set.add(start_node)
+        focal_set.add(start_node)
+        min_f_score = start_node.f_score
+
         while open_set:
-            current = min(open_set)
+            # update focal set if min_f_score has increased
+            new_min_f_score = min([node.f_score for node in open_set])
+            if min_f_score < new_min_f_score:
+                for node in open_set:
+                    if self.w * min_f_score <= node.f_score <= self.w * new_min_f_score:
+                        focal_set.add(node)
+                min_f_score = new_min_f_score
+
+            # select node from focal set
+            current = min(focal_set)
             open_set.remove(current)
+            focal_set.remove(current)
+            closed_set.add(current)
+
+            # check if current node is at goal
             if current.point == self.goal_point:
-                return self.reconstruct_path(current)
+                return self.reconstruct_path(current), min(open_set).f_score
+
+            # get neighbors
             neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
+                if neighbor in closed_set:
+                    continue
+
                 if neighbor not in open_set:
                     open_set.add(neighbor)
                     neighbor.parent = current
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
+                    neighbor.d_score = self.focal_vertex_heuristic(
+                        neighbor
+                    ) + self.focal_edge_heuristic(current, neighbor)
+                    if neighbor.f_score <= self.w * min_f_score:
+                        focal_set.add(neighbor)
 
                 if current.g_score + 1 < neighbor.g_score:
                     neighbor.parent = current
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
+                    neighbor.d_score = self.focal_vertex_heuristic(
+                        neighbor
+                    ) + self.focal_edge_heuristic(current, neighbor)
 
         return None
 
     def heuristic(self, node) -> int:
         # return manhattan distance
         return node.point.manhattan_distance(self.goal_point)
+
+    def focal_vertex_heuristic(self, node) -> int:
+        num_of_conflicts = 0
+        for path in self.env.reservation_table:
+            if len(path) <= node.time:
+                other_node = path[-1]
+            else:
+                other_node = path[node.time]
+            if node.point == other_node.point:
+                num_of_conflicts += 1
+        return num_of_conflicts
+
+    def focal_edge_heuristic(self, prev_node, next_node) -> int:
+        num_of_conflicts = 0
+        for path in self.env.reservation_table:
+            if len(path) <= next_node.time:
+                continue
+
+            other_prev_node = path[next_node.time - 1]
+            other_next_node = path[next_node.time]
+
+            if (
+                prev_node.point == other_next_node.point
+                and next_node.point == other_prev_node.point
+            ):
+                num_of_conflicts += 1
+        return num_of_conflicts
 
     @staticmethod
     def reconstruct_path(node: Node) -> List[Tuple[Point, int]]:

@@ -2,7 +2,7 @@ import yaml
 import time
 from common.environment import Environment
 from common.point import Point
-from stastar_epsilon.stastar_epsilon import SpaceTimeAstar
+from stastar_epsilon.stastar_epsilon import SpaceTimeAstarEpsilon
 
 if __name__ == "__main__":
     import argparse
@@ -10,6 +10,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", "-i", type=str, help="Input file path")
     parser.add_argument("--output", "-o", type=str, help="Output file path")
+    parser.add_argument("--w", "-w", type=float, help="Weight")
     args = parser.parse_args()
 
     with open(args.input, "r") as stream:
@@ -31,15 +32,17 @@ if __name__ == "__main__":
         dynamic_obstacles,
     )
 
-    planner = SpaceTimeAstar(
+    planner = SpaceTimeAstarEpsilon(
         Point(*input_data["start_point"]),
         Point(*input_data["goal_point"]),
         environment,
+        args.w,
     )
 
     start_time = time.time()
-    result = planner.plan()
+    result, f_min = planner.plan()
     print(f"Time elapsed: {time.time() - start_time}")
+    print(f"Min f score: {f_min}")
     if result is None:
         print("No path found")
     else:
