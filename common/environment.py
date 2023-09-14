@@ -13,6 +13,7 @@ class Environment:
     ):
         self.dimension = dimension
         self.space_limit = space_limit
+        self.reservation_table = []
         if self.dimension != len(self.space_limit):
             raise ValueError(
                 f"Dimension does not match the length of space limit: {self.space_limit}"
