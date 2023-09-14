@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="mapf_visualizer" type="PythonConfigurationType" factoryName="Python" folderName="visualizer" nameIsGenerated="true">
+  <configuration default="false" name="2d_mapf_visualizer" type="PythonConfigurationType" factoryName="Python" folderName="visualizer" nameIsGenerated="true">
     <module name="multi_agent_path_finding" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -12,7 +12,7 @@
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/visualizer/mapf_visualizer.py" />
+    <option name="SCRIPT_NAME" value="$PROJECT_DIR$/visualizer/2d_mapf_visualizer.py" />
     <option name="PARAMETERS" value="-i ../configs/ecbs/random_input.yaml -o ../examples/ecbs/output.yaml" />
     <option name="SHOW_COMMAND_LINE" value="false" />
     <option name="EMULATE_TERMINAL" value="false" />
