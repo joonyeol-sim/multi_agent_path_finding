@@ -6,7 +6,7 @@ import pytest
 
 from common.environment import Environment
 from common.point import Point
-from stastar.space_time_astar import SpaceTimeAstar
+from stastar.stastar import SpaceTimeAstar
 
 from itertools import product
 

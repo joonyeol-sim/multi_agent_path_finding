@@ -12,7 +12,7 @@ from common.constraint import (
     EdgeConstraint,
 )
 from cbs.ct_node import CTNode
-from stastar.space_time_astar import SpaceTimeAstar
+from stastar.stastar import SpaceTimeAstar
 
 
 class ConflictBasedSearch:

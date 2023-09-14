@@ -28,14 +28,19 @@ class SpaceTimeAstar:
         self, constraints: List[Constraint] = None
     ) -> List[Tuple[Point, int]] | None:
         open_set: Set[Node] = set()
+        closed_set: Set[Node] = set()
         open_set.add(Node(self.start_point, 0))
         while open_set:
             current = min(open_set)
             open_set.remove(current)
+            closed_set.add(current)
             if current.point == self.goal_point:
                 return self.reconstruct_path(current)
             neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
+                if neighbor in closed_set:
+                    continue
+
                 if neighbor not in open_set:
                     open_set.add(neighbor)
                     neighbor.parent = current
