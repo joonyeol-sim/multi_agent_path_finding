@@ -1,12 +1,12 @@
 from abc import ABC
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import Tuple
 from common.point import Point
 
 
 @dataclass
 class Constraint(ABC):
-    agent_id: int
+    pass
 
 
 @dataclass

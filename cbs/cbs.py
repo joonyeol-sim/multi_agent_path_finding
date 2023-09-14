@@ -61,6 +61,7 @@ class ConflictBasedSearch:
                 new_node = deepcopy(cur_node)
                 constraint = self.generate_constraint_from_conflict(agent_id, conflict)
                 new_node.constraints.append(constraint)
+                # TODO: change constraints to dict
                 new_node.solution[agent_id] = self.individual_planners[agent_id].plan(
                     constraints=new_node.constraints
                 )

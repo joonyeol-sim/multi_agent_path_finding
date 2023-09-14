@@ -1,10 +1,8 @@
 import yaml
 import time
 from common.environment import Environment
-from common.point import Point
-from cbs_tree.cbs_tree import (
-    ConflictBasedSearchFast,
-)
+from common.point import Point2D, Point3D
+from ecbs.ecbs import EnhancedConflictBasedSearch
 
 if __name__ == "__main__":
     import argparse
@@ -12,10 +10,18 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", "-i", type=str, help="Input file path")
     parser.add_argument("--output", "-o", type=str, help="Output file path")
+    parser.add_argument("--w", "-w", type=float, help="Weight")
     args = parser.parse_args()
 
     with open(args.input, "r") as stream:
         input_data = yaml.load(stream, Loader=yaml.FullLoader)
+
+    if input_data["dimension"] == 2:
+        Point = Point2D
+    elif input_data["dimension"] == 3:
+        Point = Point3D
+    else:
+        raise ValueError(f"Dimension must be 2 or 3: {input_data['dimension']}")
 
     static_obstacles = [
         Point(*static_obstacle) for static_obstacle in input_data["static_obstacles"]
@@ -35,15 +41,17 @@ if __name__ == "__main__":
 
     start_points = [Point(*start_point) for start_point in input_data["start_points"]]
     goal_points = [Point(*goal_point) for goal_point in input_data["goal_points"]]
-    planner = ConflictBasedSearchFast(
+    planner = EnhancedConflictBasedSearch(
         start_points,
         goal_points,
         environment,
+        args.w,
     )
 
     start_time = time.time()
-    result = planner.plan()
+    result, lower_bound = planner.plan()
     print(f"Time elapsed: {time.time() - start_time}")
+    print(f"lower bound: {lower_bound}")
     if result is None:
         print("No path found")
     else:

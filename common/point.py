@@ -4,23 +4,11 @@ from abc import ABC, abstractmethod
 from typing import Union
 from dataclasses import dataclass
 
-# Redefining the classes using @dataclass and the __new__ method
 
-
-@dataclass(init=False)
+@dataclass
 class Point(ABC):
     x: int
     y: int
-
-    def __new__(cls, *args, **kwargs):
-        if len(args) == 2:
-            instance = super(Point, cls).__new__(Point2D)
-        elif len(args) == 3:
-            instance = super(Point, cls).__new__(Point3D)
-        else:
-            raise ValueError("Invalid number of arguments for Point")
-        instance.__init__(*args, **kwargs)
-        return instance
 
     @abstractmethod
     def __hash__(self):
@@ -39,7 +27,7 @@ class Point(ABC):
         pass
 
 
-@dataclass(init=False)
+@dataclass
 class Point2D(Point):
     def __init__(self, x, y):
         self.x = x
@@ -63,7 +51,7 @@ class Point2D(Point):
         ]
 
 
-@dataclass(init=False)
+@dataclass
 class Point3D(Point):
     z: int
 

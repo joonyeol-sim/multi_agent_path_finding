@@ -31,10 +31,16 @@ class SpaceTimeAstarEpsilon:
             raise ValueError(f"Start point is not valid: {start_point}")
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
+        if not w:
+            raise ValueError(f"w must be given")
 
     def plan(
         self, constraints: List[Constraint] = None
     ) -> Tuple[List[Tuple[Point, int]], int] | None:
+        self.open_set.clear()
+        self.focal_set.clear()
+        self.closed_set.clear()
+
         start_node = Node(self.start_point, 0)
         start_node.parent = None
         start_node.g_score = 0
@@ -101,11 +107,13 @@ class SpaceTimeAstarEpsilon:
     def focal_vertex_heuristic(self, node) -> int:
         num_of_conflicts = 0
         for path in self.env.reservation_table:
+            if not path:
+                continue
             if len(path) <= node.time:
-                other_node = path[-1]
+                other_point = path[-1]
             else:
-                other_node = path[node.time]
-            if node.point == other_node.point:
+                other_point = path[node.time]
+            if node.point == other_point:
                 num_of_conflicts += 1
         return num_of_conflicts
 
@@ -115,12 +123,12 @@ class SpaceTimeAstarEpsilon:
             if len(path) <= next_node.time:
                 continue
 
-            other_prev_node = path[next_node.time - 1]
-            other_next_node = path[next_node.time]
+            other_prev_point = path[next_node.time - 1]
+            other_next_point = path[next_node.time]
 
             if (
-                prev_node.point == other_next_node.point
-                and next_node.point == other_prev_node.point
+                prev_node.point == other_next_point
+                and next_node.point == other_prev_point
             ):
                 num_of_conflicts += 1
         return num_of_conflicts

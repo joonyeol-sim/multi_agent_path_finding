@@ -1,20 +1,24 @@
 """Tests for `space_time_astar` package."""
 
 import random
+from itertools import product
 
 import pytest
 
 from common.environment import Environment
-from common.point import Point
+from common.point import Point2D, Point3D
 from stastar.stastar import SpaceTimeAstar
-
-from itertools import product
 
 
 class TestSpaceTimeAstar:
     def test_open_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 10) for _ in range(dimension)]
+
+            if dimension == 2:
+                Point = Point2D
+            else:
+                Point = Point3D
 
             start_point = Point(
                 *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
@@ -39,6 +43,12 @@ class TestSpaceTimeAstar:
     def test_no_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 10) for _ in range(dimension)]
+
+            if dimension == 2:
+                Point = Point2D
+            else:
+                Point = Point3D
+
             start_point = Point(
                 *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
             )
@@ -70,6 +80,12 @@ class TestSpaceTimeAstar:
     def test_static_obstacle_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 10) for _ in range(dimension)]
+
+            if dimension == 2:
+                Point = Point2D
+            else:
+                Point = Point3D
+
             start_point = Point(*[0 for _ in range(dimension)])
             goal_point = Point(*[space_limits[i] - 1 for i in range(dimension)])
 
@@ -98,6 +114,12 @@ class TestSpaceTimeAstar:
     def test_dynamic_obstacle_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 10) for _ in range(dimension)]
+
+            if dimension == 2:
+                Point = Point2D
+            else:
+                Point = Point3D
+
             start_point = Point(*[0 for _ in range(dimension)])
             goal_point = Point(*[space_limits[i] - 1 for i in range(dimension)])
             dynamic_obstacles = []
@@ -135,6 +157,12 @@ class TestSpaceTimeAstar:
     def test_point_is_in_invalid_area(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 10) for _ in range(dimension)]
+
+            if dimension == 2:
+                Point = Point2D
+            else:
+                Point = Point3D
+
             env = Environment(dimension=dimension, space_limit=space_limits)
 
             # start point is out of bounds
@@ -171,17 +199,26 @@ class TestSpaceTimeAstar:
 
     def test_dimension_does_not_match(self):
         space_limits = [random.randint(2, 10) for _ in range(3)]
+
         env = Environment(dimension=3, space_limit=space_limits)
 
-        goal_point = Point(*[random.randint(0, space_limits[i] - 1) for i in range(2)])
-        start_point = Point(*[random.randint(0, space_limits[i] - 1) for i in range(3)])
+        goal_point = Point2D(
+            *[random.randint(0, space_limits[i] - 1) for i in range(2)]
+        )
+        start_point = Point3D(
+            *[random.randint(0, space_limits[i] - 1) for i in range(3)]
+        )
         with pytest.raises(ValueError):
             astar = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
 
-        start_point = Point(*[random.randint(0, space_limits[i] - 1) for i in range(3)])
-        goal_point = Point(*[random.randint(0, space_limits[i] - 1) for i in range(2)])
+        start_point = Point3D(
+            *[random.randint(0, space_limits[i] - 1) for i in range(3)]
+        )
+        goal_point = Point2D(
+            *[random.randint(0, space_limits[i] - 1) for i in range(2)]
+        )
         with pytest.raises(ValueError):
             astar = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
