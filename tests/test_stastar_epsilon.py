@@ -29,15 +29,15 @@ class TestSpaceTimeAstarEpsilon:
 
             env = Environment(dimension=dimension, space_limit=space_limits)
             w = random.random() + 1
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )
-            path, f_min = astar.plan()
+            path, f_min = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
             # check if the path is bounded suboptimal
-            assert len(path) <= w * f_min
+            assert len(path) - 1 <= w * f_min
 
     def test_no_plan(self):
         for dimension in [2, 3]:
@@ -70,10 +70,10 @@ class TestSpaceTimeAstarEpsilon:
                 dynamic_obstacles=dynamic_obstacles,
             )
             w = random.random() + 1
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )
-            path = astar.plan()
+            path = planner.plan()
 
             assert path is None
 
@@ -100,15 +100,15 @@ class TestSpaceTimeAstarEpsilon:
                 static_obstacles=static_obstacles,
             )
             w = random.random() + 1
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )
-            path, f_min = astar.plan()
+            path, f_min = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
             # check if the path is bounded suboptimal
-            assert len(path) <= w * f_min
+            assert len(path) - 1 <= w * f_min
             for node in path:
                 assert node[0] not in static_obstacles
 
@@ -144,15 +144,15 @@ class TestSpaceTimeAstarEpsilon:
                 dynamic_obstacles=dynamic_obstacles,
             )
             w = random.random() + 1
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )
-            path, f_min = astar.plan()
+            path, f_min = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
             # check if the path is bounded suboptimal
-            assert len(path) <= w * f_min
+            assert len(path) - 1 <= w * f_min
             for node in path:
                 for obstacle in dynamic_obstacles:
                     if obstacle[1][0] <= node[1] <= obstacle[1][1]:
@@ -176,13 +176,13 @@ class TestSpaceTimeAstarEpsilon:
             )
             start_point = Point(*[-1 for _ in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstarEpsilon(
+                planner = SpaceTimeAstarEpsilon(
                     start_point=start_point, goal_point=goal_point, env=env, w=w
                 )
 
             start_point = Point(*[space_limits[i] for i in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstarEpsilon(
+                planner = SpaceTimeAstarEpsilon(
                     start_point=start_point, goal_point=goal_point, env=env, w=w
                 )
 
@@ -192,13 +192,13 @@ class TestSpaceTimeAstarEpsilon:
             )
             goal_point = Point(*[-1 for _ in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstarEpsilon(
+                planner = SpaceTimeAstarEpsilon(
                     start_point=start_point, goal_point=goal_point, env=env, w=w
                 )
 
             goal_point = Point(*[space_limits[i] for i in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstarEpsilon(
+                planner = SpaceTimeAstarEpsilon(
                     start_point=start_point, goal_point=goal_point, env=env, w=w
                 )
 
@@ -215,7 +215,7 @@ class TestSpaceTimeAstarEpsilon:
             *[random.randint(0, space_limits[i] - 1) for i in range(3)]
         )
         with pytest.raises(ValueError):
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )
 
@@ -226,6 +226,6 @@ class TestSpaceTimeAstarEpsilon:
             *[random.randint(0, space_limits[i] - 1) for i in range(2)]
         )
         with pytest.raises(ValueError):
-            astar = SpaceTimeAstarEpsilon(
+            planner = SpaceTimeAstarEpsilon(
                 start_point=start_point, goal_point=goal_point, env=env, w=w
             )

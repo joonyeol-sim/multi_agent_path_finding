@@ -3,12 +3,12 @@
 import random
 from itertools import combinations
 
-from cbs.cbs import ConflictBasedSearch
+from ecbs.ecbs import EnhancedConflictBasedSearch
 from common.environment import Environment
 from common.point import Point2D, Point3D
 
 
-def find_inter_agent_conflict(solution) -> bool:
+def find_first_conflict(solution) -> bool:
     # Vertex Conflict
     for agent1, agent2 in combinations(range(len(solution)), 2):
         max_time = max(len(solution[agent1]), len(solution[agent2]))
@@ -37,7 +37,7 @@ def find_inter_agent_conflict(solution) -> bool:
     return False
 
 
-class TestConflictBasedSearch:
+class TestEnhancedConflictBasedSearch:
     def test_open_plan(self):
         for dimension in [2, 3]:
             space_limits = [random.randint(2, 30) for _ in range(dimension)]
@@ -66,12 +66,14 @@ class TestConflictBasedSearch:
                 goal_points.append(goal_point)
 
             env = Environment(dimension=dimension, space_limit=space_limits)
-            planner = ConflictBasedSearch(
+            w = random.random() + 1
+            planner = EnhancedConflictBasedSearch(
                 start_points=start_points,
                 goal_points=goal_points,
                 env=env,
+                w=w,
             )
-            solution = planner.plan()
+            solution, lower_bound = planner.plan()
 
             # interpolate the solution
             interpolated_solution = []
@@ -90,4 +92,6 @@ class TestConflictBasedSearch:
                 assert path[0] == (start_points[agent_id], 0)
                 assert path[-1] == (goal_points[agent_id], len(path) - 1)
             # check if the solution is collision-free
-            assert not find_inter_agent_conflict(interpolated_solution)
+            assert not find_first_conflict(interpolated_solution)
+            # check if the solution is bounded suboptimal
+            assert planner.calculate_cost(solution) <= w * lower_bound

@@ -28,12 +28,12 @@ class TestSpaceTimeAstar:
             )
 
             env = Environment(dimension=dimension, space_limit=space_limits)
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point,
                 goal_point=goal_point,
                 env=env,
             )
-            path = astar.plan()
+            path = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
@@ -70,10 +70,10 @@ class TestSpaceTimeAstar:
                 static_obstacles=static_obstacles,
                 dynamic_obstacles=dynamic_obstacles,
             )
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
-            path = astar.plan()
+            path = planner.plan()
 
             assert path is None
 
@@ -99,10 +99,10 @@ class TestSpaceTimeAstar:
                 space_limit=space_limits,
                 static_obstacles=static_obstacles,
             )
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
-            path = astar.plan()
+            path = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
@@ -142,10 +142,10 @@ class TestSpaceTimeAstar:
                 space_limit=space_limits,
                 dynamic_obstacles=dynamic_obstacles,
             )
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
-            path = astar.plan()
+            path = planner.plan()
 
             assert path[0] == (start_point, 0)
             assert path[-1] == (goal_point, len(path) - 1)
@@ -171,13 +171,13 @@ class TestSpaceTimeAstar:
             )
             start_point = Point(*[-1 for _ in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
+                planner = SpaceTimeAstar(
                     start_point=start_point, goal_point=goal_point, env=env
                 )
 
             start_point = Point(*[space_limits[i] for i in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
+                planner = SpaceTimeAstar(
                     start_point=start_point, goal_point=goal_point, env=env
                 )
 
@@ -187,13 +187,13 @@ class TestSpaceTimeAstar:
             )
             goal_point = Point(*[-1 for _ in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
+                planner = SpaceTimeAstar(
                     start_point=start_point, goal_point=goal_point, env=env
                 )
 
             goal_point = Point(*[space_limits[i] for i in range(dimension)])
             with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
+                planner = SpaceTimeAstar(
                     start_point=start_point, goal_point=goal_point, env=env
                 )
 
@@ -209,7 +209,7 @@ class TestSpaceTimeAstar:
             *[random.randint(0, space_limits[i] - 1) for i in range(3)]
         )
         with pytest.raises(ValueError):
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
 
@@ -220,6 +220,6 @@ class TestSpaceTimeAstar:
             *[random.randint(0, space_limits[i] - 1) for i in range(2)]
         )
         with pytest.raises(ValueError):
-            astar = SpaceTimeAstar(
+            planner = SpaceTimeAstar(
                 start_point=start_point, goal_point=goal_point, env=env
             )
