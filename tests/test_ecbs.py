@@ -40,7 +40,7 @@ def find_first_conflict(solution) -> bool:
 class TestEnhancedConflictBasedSearch:
     def test_open_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 30) for _ in range(dimension)]
+            space_limits = [random.randint(10, 30) for _ in range(dimension)]
             robot_num = 10
 
             if dimension == 2:

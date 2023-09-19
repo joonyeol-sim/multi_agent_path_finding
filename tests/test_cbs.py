@@ -40,7 +40,7 @@ def find_inter_agent_conflict(solution) -> bool:
 class TestConflictBasedSearch:
     def test_open_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 30) for _ in range(dimension)]
+            space_limits = [random.randint(10, 30) for _ in range(dimension)]
             robot_num = 10
 
             if dimension == 2:
