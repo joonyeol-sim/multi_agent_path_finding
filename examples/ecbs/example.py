@@ -52,6 +52,7 @@ if __name__ == "__main__":
     result, lower_bound = planner.plan()
     print(f"Time elapsed: {time.time() - start_time}")
     print(f"lower bound: {lower_bound}")
+    print(f"Cost: {planner.calculate_cost(result)}")
     if result is None:
         print("No path found")
     else:

@@ -49,6 +49,7 @@ if __name__ == "__main__":
     start_time = time.time()
     result = planner.plan()
     print(f"Time elapsed: {time.time() - start_time}")
+    print(f"Cost: {planner.calculate_cost(result)}")
     if result is None:
         print("No path found")
     else:

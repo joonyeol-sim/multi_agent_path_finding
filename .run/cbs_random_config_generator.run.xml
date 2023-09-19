@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="random_config_generator" type="PythonConfigurationType" factoryName="Python" folderName="generator" nameIsGenerated="true">
+  <configuration default="false" name="cbs_random_config_generator" type="PythonConfigurationType" factoryName="Python" folderName="generator">
     <module name="multi_agent_path_finding" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />

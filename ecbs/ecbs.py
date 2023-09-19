@@ -109,7 +109,7 @@ class EnhancedConflictBasedSearch:
 
             # if there is no conflict, return the solution
             if not conflict:
-                return cur_node.solution, cur_node.lower_bound
+                return cur_node.solution, min_lower_bound
 
             # if there is a conflict, generate two child nodes
             for agent_id in conflict.agent_ids:
@@ -168,14 +168,14 @@ class EnhancedConflictBasedSearch:
     @staticmethod
     def get_state(agent_id: int, time: int, solution: List[List[Tuple[Point, int]]]):
         if time >= len(solution[agent_id]):
-            return solution[agent_id][-1]
+            return solution[agent_id][-1][0]
         else:
-            return solution[agent_id][time]
+            return solution[agent_id][time][0]
 
     def calculate_cost(self, solution: List[List[Tuple[Point, int]]]) -> int:
         cost = 0
         for i in range(self.robot_num):
-            cost += len(solution[i])
+            cost += len(solution[i]) - 1
         return cost
 
     def find_first_conflict(self, solution: List[List[Tuple[Point, int]]]) -> Conflict:
@@ -183,37 +183,32 @@ class EnhancedConflictBasedSearch:
         for agent1, agent2 in combinations(range(self.robot_num), 2):
             max_time = max(len(solution[agent1]), len(solution[agent2]))
             for time in range(max_time):
-                point1, time1 = self.get_state(agent1, time, solution)
-                point2, time2 = self.get_state(agent2, time, solution)
-                if point1 == point2 and time1 == time2:
+                point1 = self.get_state(agent1, time, solution)
+                point2 = self.get_state(agent2, time, solution)
+                if point1 == point2:
                     return VertexConflict(
                         agent_ids=[agent1, agent2],
                         point=point1,
-                        time=time1,
+                        time=time,
                     )
 
         # Edge Conflict
         for agent1, agent2 in combinations(range(self.robot_num), 2):
             max_time = max(len(solution[agent1]), len(solution[agent2]))
             for time in range(max_time - 1):
-                prev_point1, prev_time1 = self.get_state(agent1, time, solution)
-                next_point1, next_time1 = self.get_state(agent1, time + 1, solution)
-                prev_point2, prev_time2 = self.get_state(agent2, time, solution)
-                next_point2, next_time2 = self.get_state(agent2, time + 1, solution)
+                prev_point1 = self.get_state(agent1, time, solution)
+                next_point1 = self.get_state(agent1, time + 1, solution)
+                prev_point2 = self.get_state(agent2, time, solution)
+                next_point2 = self.get_state(agent2, time + 1, solution)
 
-                if (
-                    prev_point1 == next_point2
-                    and prev_point2 == next_point1
-                    and prev_time1 == prev_time2
-                    and next_time1 == next_time2
-                ):
+                if prev_point1 == next_point2 and prev_point2 == next_point1:
                     return EdgeConflict(
                         agent_ids=[agent1, agent2],
                         points={
                             agent1: (prev_point1, next_point1),
                             agent2: (prev_point2, next_point2),
                         },
-                        times=(prev_time1, next_time1),
+                        times=(time, time + 1),
                     )
 
     def focal_heuristic(self, solution: List[List[Tuple[Point, int]]]) -> int:
@@ -221,26 +216,21 @@ class EnhancedConflictBasedSearch:
         for agent1, agent2 in combinations(range(self.robot_num), 2):
             max_time = max(len(solution[agent1]), len(solution[agent2]))
             for time in range(max_time):
-                point1, time1 = self.get_state(agent1, time, solution)
-                point2, time2 = self.get_state(agent2, time, solution)
-                if point1 == point2 and time1 == time2:
+                point1 = self.get_state(agent1, time, solution)
+                point2 = self.get_state(agent2, time, solution)
+                if point1 == point2:
                     num_of_conflicts += 1
 
         # Edge Conflict
         for agent1, agent2 in combinations(range(self.robot_num), 2):
             max_time = max(len(solution[agent1]), len(solution[agent2]))
             for time in range(max_time - 1):
-                prev_point1, prev_time1 = self.get_state(agent1, time, solution)
-                next_point1, next_time1 = self.get_state(agent1, time + 1, solution)
-                prev_point2, prev_time2 = self.get_state(agent2, time, solution)
-                next_point2, next_time2 = self.get_state(agent2, time + 1, solution)
+                prev_point1 = self.get_state(agent1, time, solution)
+                next_point1 = self.get_state(agent1, time + 1, solution)
+                prev_point2 = self.get_state(agent2, time, solution)
+                next_point2 = self.get_state(agent2, time + 1, solution)
 
-                if (
-                    prev_point1 == next_point2
-                    and prev_point2 == next_point1
-                    and prev_time1 == prev_time2
-                    and next_time1 == next_time2
-                ):
+                if prev_point1 == next_point2 and prev_point2 == next_point1:
                     num_of_conflicts += 1
 
         return num_of_conflicts

@@ -13,7 +13,7 @@ from stastar.stastar import SpaceTimeAstar
 class TestSpaceTimeAstar:
     def test_open_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
 
             if dimension == 2:
                 Point = Point2D
@@ -42,7 +42,7 @@ class TestSpaceTimeAstar:
 
     def test_no_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
 
             if dimension == 2:
                 Point = Point2D
@@ -79,7 +79,7 @@ class TestSpaceTimeAstar:
 
     def test_static_obstacle_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
 
             if dimension == 2:
                 Point = Point2D
@@ -113,7 +113,7 @@ class TestSpaceTimeAstar:
 
     def test_dynamic_obstacle_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
 
             if dimension == 2:
                 Point = Point2D
@@ -156,7 +156,7 @@ class TestSpaceTimeAstar:
 
     def test_point_is_in_invalid_area(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
 
             if dimension == 2:
                 Point = Point2D
@@ -198,7 +198,7 @@ class TestSpaceTimeAstar:
                 )
 
     def test_dimension_does_not_match(self):
-        space_limits = [random.randint(2, 10) for _ in range(3)]
+        space_limits = [random.randint(2, 30) for _ in range(3)]
 
         env = Environment(dimension=3, space_limit=space_limits)
 

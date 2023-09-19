@@ -1,225 +1,93 @@
 """Tests for `space_time_astar` package."""
 
 import random
-from itertools import product
+from itertools import combinations
 
-import pytest
-
+from cbs.cbs import ConflictBasedSearch
 from common.environment import Environment
 from common.point import Point2D, Point3D
-from stastar.stastar import SpaceTimeAstar
 
 
-class TestSpaceTimeAstar:
+def find_first_conflict(solution) -> bool:
+    # Vertex Conflict
+    for agent1, agent2 in combinations(range(len(solution)), 2):
+        max_time = max(len(solution[agent1]), len(solution[agent2]))
+        for time in range(max_time):
+            point1, time1 = solution[agent1][time]
+            point2, time2 = solution[agent2][time]
+            if point1 == point2 and time1 == time2:
+                return True
+
+    # Edge Conflict
+    for agent1, agent2 in combinations(range(len(solution)), 2):
+        max_time = max(len(solution[agent1]), len(solution[agent2]))
+        for time in range(max_time - 1):
+            prev_point1, prev_time1 = solution[agent1][time]
+            next_point1, next_time1 = solution[agent1][time + 1]
+            prev_point2, prev_time2 = solution[agent2][time]
+            next_point2, next_time2 = solution[agent2][time + 1]
+
+            if (
+                prev_point1 == next_point2
+                and prev_point2 == next_point1
+                and prev_time1 == prev_time2
+                and next_time1 == next_time2
+            ):
+                return True
+    return False
+
+
+class TestConflictBasedSearch:
     def test_open_plan(self):
         for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
+            space_limits = [random.randint(2, 30) for _ in range(dimension)]
+            robot_num = 10
 
             if dimension == 2:
                 Point = Point2D
             else:
                 Point = Point3D
 
-            start_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
-            )
-            goal_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
-            )
+            start_points = []
+            goal_points = []
 
-            env = Environment(dimension=dimension, space_limit=space_limits)
-            astar = SpaceTimeAstar(
-                start_point=start_point,
-                goal_point=goal_point,
-                env=env,
-            )
-            path = astar.plan()
-
-            assert path[0] == (start_point, 0)
-            assert path[-1] == (goal_point, len(path) - 1)
-            # check if the path is optimal
-            assert len(path) == start_point.manhattan_distance(goal_point) + 1
-
-    def test_no_plan(self):
-        for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
-
-            if dimension == 2:
-                Point = Point2D
-            else:
-                Point = Point3D
-
-            start_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
-            )
-            goal_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
-            )
-
-            static_obstacles = start_point.get_neighbor_points()
-            if dimension == 2:
-                dynamic_obstacles = [(Point(*[start_point.x, start_point.y]), [1, -1])]
-            else:
-                dynamic_obstacles = [
-                    (Point(*[start_point.x, start_point.y, start_point.z]), [1, -1])
-                ]
-
-            env = Environment(
-                dimension=dimension,
-                space_limit=space_limits,
-                static_obstacles=static_obstacles,
-                dynamic_obstacles=dynamic_obstacles,
-            )
-            astar = SpaceTimeAstar(
-                start_point=start_point, goal_point=goal_point, env=env
-            )
-            path = astar.plan()
-
-            assert path is None
-
-    def test_static_obstacle_plan(self):
-        for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
-
-            if dimension == 2:
-                Point = Point2D
-            else:
-                Point = Point3D
-
-            start_point = Point(*[0 for _ in range(dimension)])
-            goal_point = Point(*[space_limits[i] - 1 for i in range(dimension)])
-
-            static_obstacles = []
-            ranges = [range(1, space_limits[i] - 1) for i in range(dimension)]
-            for coordinates in product(*ranges):
-                static_obstacles.append(Point(*coordinates))
-
-            env = Environment(
-                dimension=dimension,
-                space_limit=space_limits,
-                static_obstacles=static_obstacles,
-            )
-            astar = SpaceTimeAstar(
-                start_point=start_point, goal_point=goal_point, env=env
-            )
-            path = astar.plan()
-
-            assert path[0] == (start_point, 0)
-            assert path[-1] == (goal_point, len(path) - 1)
-            # check if the path is optimal
-            assert len(path) == start_point.manhattan_distance(goal_point) + 1
-            for node in path:
-                assert node[0] not in static_obstacles
-
-    def test_dynamic_obstacle_plan(self):
-        for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
-
-            if dimension == 2:
-                Point = Point2D
-            else:
-                Point = Point3D
-
-            start_point = Point(*[0 for _ in range(dimension)])
-            goal_point = Point(*[space_limits[i] - 1 for i in range(dimension)])
-            dynamic_obstacles = []
-            num_of_cells = 1
-            for i in range(dimension):
-                num_of_cells *= space_limits[i]
-            num_of_dynamic_obstacles = random.randint(1, num_of_cells // 2)
-            time_range = start_point.manhattan_distance(goal_point)
-            for i in range(1, num_of_dynamic_obstacles):
-                start_time = random.randint(0, time_range)
-                end_time = random.randint(start_time, time_range)
-                rand_point = Point(
+            while len(start_points) < robot_num or len(goal_points) < robot_num:
+                start_point = Point(
                     *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
                 )
-                if rand_point != start_point and rand_point != goal_point:
-                    dynamic_obstacles.append((rand_point, [start_time, end_time]))
-
-            env = Environment(
-                dimension=dimension,
-                space_limit=space_limits,
-                dynamic_obstacles=dynamic_obstacles,
-            )
-            astar = SpaceTimeAstar(
-                start_point=start_point, goal_point=goal_point, env=env
-            )
-            path = astar.plan()
-
-            assert path[0] == (start_point, 0)
-            assert path[-1] == (goal_point, len(path) - 1)
-            for node in path:
-                for obstacle in dynamic_obstacles:
-                    if obstacle[1][0] <= node[1] <= obstacle[1][1]:
-                        assert node[0] != obstacle[0]
-
-    def test_point_is_in_invalid_area(self):
-        for dimension in [2, 3]:
-            space_limits = [random.randint(2, 10) for _ in range(dimension)]
-
-            if dimension == 2:
-                Point = Point2D
-            else:
-                Point = Point3D
+                goal_point = Point(
+                    *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
+                )
+                if start_point in start_points:
+                    continue
+                if goal_point in goal_points:
+                    continue
+                start_points.append(start_point)
+                goal_points.append(goal_point)
 
             env = Environment(dimension=dimension, space_limit=space_limits)
-
-            # start point is out of bounds
-            goal_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
+            astar = ConflictBasedSearch(
+                start_points=start_points,
+                goal_points=goal_points,
+                env=env,
             )
-            start_point = Point(*[-1 for _ in range(dimension)])
-            with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
-                    start_point=start_point, goal_point=goal_point, env=env
-                )
+            solution = astar.plan()
 
-            start_point = Point(*[space_limits[i] for i in range(dimension)])
-            with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
-                    start_point=start_point, goal_point=goal_point, env=env
-                )
+            # interpolate the solution
+            interpolated_solution = []
+            max_time = max([len(path) for path in solution])
+            for agent_id, path in enumerate(solution):
+                interpolated_path = []
+                for time in range(max_time):
+                    if time < len(path):
+                        interpolated_path.append(path[time])
+                    else:
+                        interpolated_path.append((path[-1][0], time))
+                interpolated_solution.append(interpolated_path)
 
-            # goal point is out of bounds
-            start_point = Point(
-                *[random.randint(0, space_limits[i] - 1) for i in range(dimension)]
-            )
-            goal_point = Point(*[-1 for _ in range(dimension)])
-            with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
-                    start_point=start_point, goal_point=goal_point, env=env
-                )
-
-            goal_point = Point(*[space_limits[i] for i in range(dimension)])
-            with pytest.raises(ValueError):
-                astar = SpaceTimeAstar(
-                    start_point=start_point, goal_point=goal_point, env=env
-                )
-
-    def test_dimension_does_not_match(self):
-        space_limits = [random.randint(2, 10) for _ in range(3)]
-
-        env = Environment(dimension=3, space_limit=space_limits)
-
-        goal_point = Point2D(
-            *[random.randint(0, space_limits[i] - 1) for i in range(2)]
-        )
-        start_point = Point3D(
-            *[random.randint(0, space_limits[i] - 1) for i in range(3)]
-        )
-        with pytest.raises(ValueError):
-            astar = SpaceTimeAstar(
-                start_point=start_point, goal_point=goal_point, env=env
-            )
-
-        start_point = Point3D(
-            *[random.randint(0, space_limits[i] - 1) for i in range(3)]
-        )
-        goal_point = Point2D(
-            *[random.randint(0, space_limits[i] - 1) for i in range(2)]
-        )
-        with pytest.raises(ValueError):
-            astar = SpaceTimeAstar(
-                start_point=start_point, goal_point=goal_point, env=env
-            )
+            # check all robots have a path
+            for agent_id, path in enumerate(solution):
+                assert path[0] == (start_points[agent_id], 0)
+                assert path[-1] == (goal_points[agent_id], len(path) - 1)
+            # check if the solution is collision-free
+            assert not find_first_conflict(interpolated_solution)

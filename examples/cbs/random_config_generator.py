@@ -47,7 +47,7 @@ def config_generator(
     start_points = []
     goal_points = []
 
-    for i in range(agent_num):
+    while len(start_points) < agent_num:
         start_point = [
             random.randint(0, space_limits[0] - 1),
             random.randint(0, space_limits[1] - 1),
@@ -56,8 +56,10 @@ def config_generator(
             random.randint(0, space_limits[0] - 1),
             random.randint(0, space_limits[1] - 1),
         ]
-        start_points.append(start_point)
-        goal_points.append(goal_point)
+
+        if start_point not in start_points and goal_point not in goal_points:
+            start_points.append(start_point)
+            goal_points.append(goal_point)
 
     static_obstacles = static_obstacle_generator(
         dimension, space_limits, static_obstacles_num, start_points, goal_points
@@ -83,6 +85,6 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     args = parser.parse_args()
 
-    config = config_generator(2, [50, 50], 50, 0, 0)
+    config = config_generator(2, [50, 50], 40, 0, 0)
     with open(args.output, "w") as f:
         yaml.dump(config, f)
