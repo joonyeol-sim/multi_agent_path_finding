@@ -1,7 +1,7 @@
 from abc import ABC
 from dataclasses import dataclass
 from typing import Tuple
-from common.point import Point
+from multi_agent_path_finding.common.point import Point
 
 
 @dataclass

@@ -1,8 +1,8 @@
 import yaml
 import time
-from common.environment import Environment
-from common.point import Point2D, Point3D
-from cbs.cbs import ConflictBasedSearch
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point2D, Point3D
+from multi_agent_path_finding.cbs.cbs import ConflictBasedSearch
 
 if __name__ == "__main__":
     import argparse

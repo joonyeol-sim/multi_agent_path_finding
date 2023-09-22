@@ -1,8 +1,10 @@
 import yaml
 import time
-from common.environment import Environment
-from common.point import Point2D, Point3D
-from stastar_epsilon.stastar_epsilon import SpaceTimeAstarEpsilon
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point2D, Point3D
+from multi_agent_path_finding.stastar_epsilon.stastar_epsilon import (
+    SpaceTimeAstarEpsilon,
+)
 
 if __name__ == "__main__":
     import argparse

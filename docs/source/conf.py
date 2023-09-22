@@ -6,22 +6,32 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Multi-Agent Pathfinding'
-copyright = '2023, Joonyeol Sim'
-author = 'Joonyeol Sim'
+project = "Multi-Agent Pathfinding"
+copyright = "2023, Joonyeol Sim"
+author = "Joonyeol Sim"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
 extensions = []
 
-templates_path = ['_templates']
+templates_path = ["_templates"]
 exclude_patterns = []
-
 
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+import sphinx_rtd_theme
 
-html_theme = 'alabaster'
-html_static_path = ['_static']
+html_theme = "sphinx_rtd_theme"
+
+html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
+
+# -- Options for Markdown output -------------------------------------------------
+from recommonmark.parser import CommonMarkParser
+
+source_parsers = {
+    ".md": CommonMarkParser,
+}
+
+source_suffix = [".rst", ".md"]

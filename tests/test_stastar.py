@@ -5,9 +5,9 @@ from itertools import product
 
 import pytest
 
-from common.environment import Environment
-from common.point import Point2D, Point3D
-from stastar.stastar import SpaceTimeAstar
+from multi_agent_path_finding.common import Environment
+from multi_agent_path_finding.common import Point2D, Point3D
+from multi_agent_path_finding.stastar import SpaceTimeAstar
 
 
 class TestSpaceTimeAstar:

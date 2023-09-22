@@ -4,16 +4,20 @@ from copy import deepcopy
 from itertools import combinations
 
 
-from common.environment import Environment
-from common.point import Point
-from common.conflict import Conflict, VertexConflict, EdgeConflict
-from common.constraint import (
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.common.conflict import (
+    Conflict,
+    VertexConflict,
+    EdgeConflict,
+)
+from multi_agent_path_finding.common.constraint import (
     Constraint,
     VertexConstraint,
     EdgeConstraint,
 )
-from cbs.ct_node import CTNode
-from stastar.stastar import SpaceTimeAstar
+from multi_agent_path_finding.cbs.ct_node import CTNode
+from multi_agent_path_finding.stastar.stastar import SpaceTimeAstar
 
 
 class ConflictBasedSearch:

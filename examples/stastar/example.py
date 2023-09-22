@@ -1,8 +1,8 @@
 import yaml
 import time
-from common.environment import Environment
-from common.point import Point
-from stastar.stastar import SpaceTimeAstar
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.stastar.stastar import SpaceTimeAstar
 
 if __name__ == "__main__":
     import argparse

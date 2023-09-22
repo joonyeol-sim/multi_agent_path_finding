@@ -2,16 +2,22 @@ from copy import deepcopy
 from itertools import combinations
 from typing import List, Tuple, Set
 
-from common.conflict import Conflict, VertexConflict, EdgeConflict
-from common.constraint import (
+from multi_agent_path_finding.common.conflict import (
+    Conflict,
+    VertexConflict,
+    EdgeConflict,
+)
+from multi_agent_path_finding.common.constraint import (
     Constraint,
     VertexConstraint,
     EdgeConstraint,
 )
-from common.environment import Environment
-from common.point import Point
-from ecbs.ct_node import CTNode
-from stastar_epsilon.stastar_epsilon import SpaceTimeAstarEpsilon
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.ecbs.ct_node import CTNode
+from multi_agent_path_finding.stastar_epsilon.stastar_epsilon import (
+    SpaceTimeAstarEpsilon,
+)
 
 
 class EnhancedConflictBasedSearch:

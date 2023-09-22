@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List, Tuple
 
-from common.point import Point
-from common.constraint import Constraint
+from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.common.constraint import Constraint
 
 
 @dataclass

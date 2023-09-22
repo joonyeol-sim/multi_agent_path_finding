@@ -1,16 +1,28 @@
 from typing import List, Set, Tuple
 
-from common.environment import Environment
-from common.point import Point
-from common.constraint import Constraint, VertexConstraint, EdgeConstraint
-from stastar.node import Node
+from multi_agent_path_finding.common.constraint import (
+    Constraint,
+    VertexConstraint,
+    EdgeConstraint,
+)
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.stastar_epsilon.node import Node
 
 
-class SpaceTimeAstar:
-    def __init__(self, start_point: Point, goal_point: Point, env: Environment):
+class SpaceTimeAstarEpsilon:
+    def __init__(
+        self, start_point: Point, goal_point: Point, env: Environment, w: float
+    ):
         self.env = env
         self.start_point = start_point
         self.goal_point = goal_point
+        self.w = w
+
+        self.open_set: Set[Node] = set()
+        self.focal_set: Set[Node] = set()
+        self.closed_set: Set[Node] = set()
+
         if env.dimension != len(start_point.__dict__.keys()):
             raise ValueError(
                 f"Dimension does not match the length of start: {start_point}"
@@ -23,42 +35,107 @@ class SpaceTimeAstar:
             raise ValueError(f"Start point is not valid: {start_point}")
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
+        if not w:
+            raise ValueError(f"w must be given")
 
     def plan(
         self, constraints: List[Constraint] = None
-    ) -> List[Tuple[Point, int]] | None:
-        open_set: Set[Node] = set()
-        closed_set: Set[Node] = set()
-        open_set.add(Node(self.start_point, 0))
-        while open_set:
-            current = min(open_set)
-            open_set.remove(current)
-            closed_set.add(current)
+    ) -> Tuple[List[Tuple[Point, int]], int] | None:
+        self.open_set.clear()
+        self.focal_set.clear()
+        self.closed_set.clear()
+
+        start_node = Node(self.start_point, 0)
+        start_node.parent = None
+        start_node.g_score = 0
+        start_node.h_score = self.heuristic(start_node)
+        start_node.f_score = start_node.g_score + start_node.h_score
+        start_node.d_score = 0
+
+        self.open_set.add(start_node)
+        self.focal_set.add(start_node)
+        min_f_score = start_node.f_score
+
+        while self.open_set:
+            # update focal set if min_f_score has increased
+            new_min_f_score = min([node.f_score for node in self.open_set])
+            if min_f_score < new_min_f_score:
+                for node in self.open_set:
+                    if self.w * min_f_score <= node.f_score <= self.w * new_min_f_score:
+                        self.focal_set.add(node)
+                min_f_score = new_min_f_score
+
+            # select node from focal set
+            current = min(self.focal_set)
+            self.open_set.remove(current)
+            self.focal_set.remove(current)
+            self.closed_set.add(current)
+
+            # check if current node is at goal
             if current.point == self.goal_point:
-                return self.reconstruct_path(current)
+                return self.reconstruct_path(current), min_f_score
+
+            # get neighbors
             neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
-                if neighbor in closed_set:
+                if neighbor in self.closed_set:
                     continue
 
-                if neighbor not in open_set:
-                    open_set.add(neighbor)
+                if neighbor not in self.open_set:
+                    self.open_set.add(neighbor)
                     neighbor.parent = current
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
+                    neighbor.d_score = self.focal_vertex_heuristic(
+                        neighbor
+                    ) + self.focal_edge_heuristic(current, neighbor)
+                    if neighbor.f_score <= self.w * min_f_score:
+                        self.focal_set.add(neighbor)
 
                 if current.g_score + 1 < neighbor.g_score:
                     neighbor.parent = current
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
+                    neighbor.d_score = self.focal_vertex_heuristic(
+                        neighbor
+                    ) + self.focal_edge_heuristic(current, neighbor)
 
         return None
 
     def heuristic(self, node) -> int:
         # return manhattan distance
         return node.point.manhattan_distance(self.goal_point)
+
+    def focal_vertex_heuristic(self, node) -> int:
+        num_of_conflicts = 0
+        for path in self.env.reservation_table:
+            if not path:
+                continue
+            if len(path) <= node.time:
+                other_point = path[-1]
+            else:
+                other_point = path[node.time]
+            if node.point == other_point:
+                num_of_conflicts += 1
+        return num_of_conflicts
+
+    def focal_edge_heuristic(self, prev_node, next_node) -> int:
+        num_of_conflicts = 0
+        for path in self.env.reservation_table:
+            if len(path) <= next_node.time:
+                continue
+
+            other_prev_point = path[next_node.time - 1]
+            other_next_point = path[next_node.time]
+
+            if (
+                prev_node.point == other_next_point
+                and next_node.point == other_prev_point
+            ):
+                num_of_conflicts += 1
+        return num_of_conflicts
 
     @staticmethod
     def reconstruct_path(node: Node) -> List[Tuple[Point, int]]:

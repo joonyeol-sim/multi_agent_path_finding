@@ -9,7 +9,8 @@ Welcome to Multi-Agent Pathfinding's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-    about_us
+
+   community.md
 
 
 Indices and tables

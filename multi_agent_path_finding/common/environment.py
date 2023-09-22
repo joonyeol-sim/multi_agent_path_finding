@@ -1,6 +1,10 @@
 from typing import List, Tuple
-from common.obstacle import StaticObstacle, DynamicObstacle, Obstacle
-from common.point import Point
+from multi_agent_path_finding.common.obstacle import (
+    StaticObstacle,
+    DynamicObstacle,
+    Obstacle,
+)
+from multi_agent_path_finding.common.point import Point
 
 
 class Environment:
