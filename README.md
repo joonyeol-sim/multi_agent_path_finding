@@ -55,3 +55,22 @@ python3 ecbs/example.py -i ../configs/ecbs/random_input.yaml -o output.yaml -w 1
 - -i: input file path
 - -o: output file path
 - -w: suboptimality bound
+
+Proceeding
+===============
+- [x] Space Time Astar
+- [x] Space Time Astar Epsilon
+- [x] Conflict Based Search
+- [x] Enhanced Conflict Based Search
+- [ ] Conflict Based Search Task Assignment
+- [ ] Enhanced Conflict Based Search Task Assignment
+- [ ] Prioritized Safe-Interval Path Planning
+- [ ] Conflict Based Search with Bypass
+
+References
+===============
+[1] Sharon, Guni, et al. "Conflict-based search for optimal multi-agent pathfinding." Artificial Intelligence 219 (2015): 40-66.
+
+[2] Silver, David. "Cooperative pathfinding." Proceedings of the aaai conference on artificial intelligence and interactive digital entertainment. Vol. 1. No. 1. 2005.
+
+[3] Barer, Max, et al. "Suboptimal variants of the conflict-based search algorithm for the multi-agent pathfinding problem." Proceedings of the International Symposium on Combinatorial Search. Vol. 5. No. 1. 2014.
