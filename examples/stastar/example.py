@@ -1,7 +1,7 @@
 import yaml
 import time
 from multi_agent_path_finding.common.environment import Environment
-from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.common.point import Point2D, Point3D
 from multi_agent_path_finding.stastar.stastar import SpaceTimeAstar
 
 if __name__ == "__main__":
@@ -14,6 +14,13 @@ if __name__ == "__main__":
 
     with open(args.input, "r") as stream:
         input_data = yaml.load(stream, Loader=yaml.FullLoader)
+
+    if input_data["dimension"] == 2:
+        Point = Point2D
+    elif input_data["dimension"] == 3:
+        Point = Point3D
+    else:
+        raise ValueError(f"Dimension must be 2 or 3: {input_data['dimension']}")
 
     static_obstacles = [
         Point(*static_obstacle) for static_obstacle in input_data["static_obstacles"]
