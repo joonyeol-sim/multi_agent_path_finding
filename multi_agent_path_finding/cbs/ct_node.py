@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 from multi_agent_path_finding.common.point import Point
 from multi_agent_path_finding.common.constraint import Constraint
@@ -7,7 +7,7 @@ from multi_agent_path_finding.common.constraint import Constraint
 
 @dataclass
 class CTNode:
-    constraints: List[Constraint]
+    constraints: Dict[int, List[Constraint]]
     solution: List[List[Tuple[Point, int]]]
     cost: int = 0
 

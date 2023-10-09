@@ -4,8 +4,8 @@ import random
 from itertools import combinations
 
 from multi_agent_path_finding.ecbs.ecbs import EnhancedConflictBasedSearch
-from multi_agent_path_finding.common import Environment
-from multi_agent_path_finding.common import Point2D, Point3D
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point2D, Point3D
 
 
 def find_first_conflict(solution) -> bool:

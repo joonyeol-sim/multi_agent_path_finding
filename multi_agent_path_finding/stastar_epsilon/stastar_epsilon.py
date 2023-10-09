@@ -114,10 +114,11 @@ class SpaceTimeAstarEpsilon:
             if not path:
                 continue
             if len(path) <= node.time:
-                other_point = path[-1]
+                other_node = path[-1]
             else:
-                other_point = path[node.time]
-            if node.point == other_point:
+                other_node = path[node.time]
+            other_point, other_time = other_node
+            if node.point == other_point and node.time == other_time:
                 num_of_conflicts += 1
         return num_of_conflicts
 
@@ -127,8 +128,8 @@ class SpaceTimeAstarEpsilon:
             if len(path) <= next_node.time:
                 continue
 
-            other_prev_point = path[next_node.time - 1]
-            other_next_point = path[next_node.time]
+            other_prev_point, other_prev_time = path[next_node.time - 1]
+            other_next_point, other_next_time = path[next_node.time]
 
             if (
                 prev_node.point == other_next_point

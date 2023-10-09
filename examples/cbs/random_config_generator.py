@@ -85,6 +85,6 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     args = parser.parse_args()
 
-    config = config_generator(2, [50, 50], 30, 0, 0)
+    config = config_generator(2, [20, 20], 50, 0, 0)
     with open(args.output, "w") as f:
         yaml.dump(config, f)

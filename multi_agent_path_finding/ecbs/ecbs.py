@@ -119,6 +119,9 @@ class EnhancedConflictBasedSearch:
 
             # if there is a conflict, generate two child nodes
             for agent_id in conflict.agent_ids:
+                # if len of path of the agent is less than time of the conflict, skip
+                if len(cur_node.solution[agent_id]) <= conflict.time:
+                    continue
                 # generate child node from the current node
                 new_node = deepcopy(cur_node)
 
@@ -148,6 +151,7 @@ class EnhancedConflictBasedSearch:
 
                 # add the child node to the open set
                 self.open_set.add(new_node)
+                print(new_node.cost, new_node.lower_bound, new_node.focal_heuristic)
 
                 # add the child node to the focal set if its lower bound is lower than w * min_lower_bound
                 if new_node.cost <= self.w * min_lower_bound:
@@ -160,11 +164,13 @@ class EnhancedConflictBasedSearch:
     ) -> Constraint:
         if isinstance(conflict, VertexConflict):
             return VertexConstraint(
+                agent_id=agent_id,
                 point=conflict.point,
                 time=conflict.time,
             )
         elif isinstance(conflict, EdgeConflict):
             return EdgeConstraint(
+                agent_id=agent_id,
                 points=conflict.points[agent_id],
                 times=conflict.times,
             )

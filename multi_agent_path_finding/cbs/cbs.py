@@ -43,7 +43,7 @@ class ConflictBasedSearch:
 
     def plan(self):
         root_node = CTNode(
-            constraints=[],
+            constraints={},
             solution=[],
             cost=0,
         )
@@ -62,12 +62,16 @@ class ConflictBasedSearch:
             if not conflict:
                 return cur_node.solution
             for agent_id in conflict.agent_ids:
+                if len(cur_node.solution[agent_id]) <= conflict.time:
+                    continue
                 new_node = deepcopy(cur_node)
-                constraint = self.generate_constraint_from_conflict(agent_id, conflict)
-                new_node.constraints.append(constraint)
+                new_constraint = self.generate_constraint_from_conflict(
+                    agent_id, conflict
+                )
+                new_node.constraints.setdefault(agent_id, []).append(new_constraint)
                 # TODO: change constraints to dict
                 new_node.solution[agent_id] = self.individual_planners[agent_id].plan(
-                    constraints=new_node.constraints
+                    constraints=new_node.constraints[agent_id]
                 )
                 if not new_node.solution[agent_id]:
                     continue
@@ -81,11 +85,13 @@ class ConflictBasedSearch:
     ) -> Constraint:
         if isinstance(conflict, VertexConflict):
             return VertexConstraint(
+                agent_id=agent_id,
                 point=conflict.point,
                 time=conflict.time,
             )
         elif isinstance(conflict, EdgeConflict):
             return EdgeConstraint(
+                agent_id=agent_id,
                 points=conflict.points[agent_id],
                 times=conflict.times,
             )

@@ -6,6 +6,7 @@ from multi_agent_path_finding.common.point import Point
 
 @dataclass
 class Constraint(ABC):
+    agent_id: int
     pass
 
 

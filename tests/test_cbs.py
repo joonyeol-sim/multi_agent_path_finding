@@ -3,9 +3,9 @@
 import random
 from itertools import combinations
 
-from multi_agent_path_finding.cbs import ConflictBasedSearch
-from multi_agent_path_finding.common import Environment
-from multi_agent_path_finding.common import Point2D, Point3D
+from multi_agent_path_finding.cbs.cbs import ConflictBasedSearch
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point2D, Point3D
 
 
 def find_inter_agent_conflict(solution) -> bool:
