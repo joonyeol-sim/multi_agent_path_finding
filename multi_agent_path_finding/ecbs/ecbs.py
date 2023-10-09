@@ -119,7 +119,7 @@ class EnhancedConflictBasedSearch:
 
             # if there is a conflict, generate two child nodes
             for agent_id in conflict.agent_ids:
-                # if len of path of the agent is less than time of the conflict, skip
+                # if the agent has already passed the conflict time, ignore it
                 if len(cur_node.solution[agent_id]) <= conflict.time:
                     continue
                 # generate child node from the current node
@@ -135,7 +135,6 @@ class EnhancedConflictBasedSearch:
 
                 # generate new path for the agent that has the conflict
                 self.env.reservation_table[agent_id] = []
-                # TODO: change constraints to dict
                 new_node.solution[agent_id], new_f_min = self.individual_planners[
                     agent_id
                 ].plan(constraints=new_node.constraints[agent_id])

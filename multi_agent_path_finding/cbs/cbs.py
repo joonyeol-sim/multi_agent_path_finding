@@ -1,11 +1,9 @@
-from heapq import heappush, heappop
-from typing import List, Tuple
 from copy import deepcopy
+from heapq import heappush
 from itertools import combinations
+from typing import List, Tuple, Set
 
-
-from multi_agent_path_finding.common.environment import Environment
-from multi_agent_path_finding.common.point import Point
+from multi_agent_path_finding.cbs.ct_node import CTNode
 from multi_agent_path_finding.common.conflict import (
     Conflict,
     VertexConflict,
@@ -16,7 +14,8 @@ from multi_agent_path_finding.common.constraint import (
     VertexConstraint,
     EdgeConstraint,
 )
-from multi_agent_path_finding.cbs.ct_node import CTNode
+from multi_agent_path_finding.common.environment import Environment
+from multi_agent_path_finding.common.point import Point
 from multi_agent_path_finding.stastar.stastar import SpaceTimeAstar
 
 
@@ -35,7 +34,7 @@ class ConflictBasedSearch:
         self.robot_num = len(start_points)
         self.env = env
 
-        self.open_set: List[CTNode] = []
+        self.open_set: Set[CTNode] = set()
         self.individual_planners = [
             SpaceTimeAstar(start_point, goal_point, env)
             for start_point, goal_point in zip(start_points, goal_points)
@@ -55,28 +54,45 @@ class ConflictBasedSearch:
             root_node.solution.append(path)
 
         root_node.cost = self.calculate_cost(root_node.solution)
-        heappush(self.open_set, root_node)
+
+        # put root node into the priority queue
+        self.open_set.add(root_node)
+
         while self.open_set:
-            cur_node = heappop(self.open_set)
+            # pop the node with the lowest cost
+            cur_node = min(self.open_set)
+            self.open_set.remove(cur_node)
+
+            # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
+
+            # if there is no conflict, return the solution
             if not conflict:
                 return cur_node.solution
+
+            # if there is a conflict, generate two new nodes
             for agent_id in conflict.agent_ids:
+                # if the agent has already passed the conflict time, ignore it
                 if len(cur_node.solution[agent_id]) <= conflict.time:
                     continue
+                # generate child node from the current node
                 new_node = deepcopy(cur_node)
+
+                # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
                     agent_id, conflict
                 )
+
+                # add the constraint to the child node
                 new_node.constraints.setdefault(agent_id, []).append(new_constraint)
-                # TODO: change constraints to dict
                 new_node.solution[agent_id] = self.individual_planners[agent_id].plan(
                     constraints=new_node.constraints[agent_id]
                 )
                 if not new_node.solution[agent_id]:
                     continue
                 new_node.cost = self.calculate_cost(new_node.solution)
-                heappush(self.open_set, new_node)
+                self.open_set.add(new_node)
+                print(new_node.cost)
         return None
 
     @staticmethod

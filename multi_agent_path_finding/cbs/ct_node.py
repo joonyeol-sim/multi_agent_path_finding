@@ -13,3 +13,6 @@ class CTNode:
 
     def __lt__(self, other):
         return self.cost < other.cost
+
+    def __hash__(self):
+        return hash(str(self.solution))
