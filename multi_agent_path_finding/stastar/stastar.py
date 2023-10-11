@@ -85,13 +85,6 @@ class SpaceTimeAstar:
             ):
                 neighbors.append(Node(neighbor_point, node.time + 1))
 
-        # wait action
-        if self.is_valid_point(
-            node.point, node.time + 1
-        ) and self.is_valid_given_constraints(
-            node.point, node.point, node.time, node.time + 1, constraints
-        ):
-            neighbors.append(Node(node.point, node.time + 1))
         return neighbors
 
     def is_valid_point(self, point: Point, time: int) -> bool:

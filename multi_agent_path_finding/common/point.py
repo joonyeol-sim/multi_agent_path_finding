@@ -48,6 +48,7 @@ class Point2D(Point):
             Point2D(self.x - 1, self.y),
             Point2D(self.x, self.y + 1),
             Point2D(self.x, self.y - 1),
+            Point2D(self.x, self.y),  # wait
         ]
 
 
@@ -81,4 +82,5 @@ class Point3D(Point):
             Point3D(self.x, self.y - 1, self.z),
             Point3D(self.x, self.y, self.z + 1),
             Point3D(self.x, self.y, self.z - 1),
+            Point3D(self.x, self.y, self.z),  # wait
         ]
