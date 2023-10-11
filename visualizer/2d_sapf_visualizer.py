@@ -1,12 +1,33 @@
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import yaml
+import numpy as np
 
 
-def animate(input_data, path_data):
+def animate(input_data, path_data, interp_steps=10):
+    # Calculate interpolated coordinates for smoother transitions
     x_coords = [point[0][0] for point in path_data]
     y_coords = [point[0][1] for point in path_data]
     times = [point[1] for point in path_data]
+
+    x_coords_interp = []
+    y_coords_interp = []
+    times_interp = []
+
+    for i in range(len(x_coords) - 1):
+        for j in range(interp_steps):
+            fraction = j / interp_steps
+            x_coords_interp.append(
+                x_coords[i] + fraction * (x_coords[i + 1] - x_coords[i])
+            )
+            y_coords_interp.append(
+                y_coords[i] + fraction * (y_coords[i + 1] - y_coords[i])
+            )
+            times_interp.append(times[i] + fraction * (times[i + 1] - times[i]))
+
+    x_coords_interp.append(x_coords[-1])
+    y_coords_interp.append(y_coords[-1])
+    times_interp.append(times[-1])
 
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_xlim(0, input_data["space_limits"][0])
@@ -40,7 +61,10 @@ def animate(input_data, path_data):
     time_text = ax.text(
         0.05, 0.95, "", transform=ax.transAxes, color="red", fontsize=12
     )
-    rect = plt.Rectangle((x_coords[0], y_coords[0]), 1, 1, facecolor="blue")
+
+    circle = plt.Circle(
+        (x_coords_interp[0] + 0.5, y_coords_interp[0] + 0.5), 0.5, facecolor="blue"
+    )
 
     # Dynamic obstacles (initially set to out-of-bounds location)
     dynamic_obstacles_rects = [
@@ -51,34 +75,36 @@ def animate(input_data, path_data):
         ax.add_patch(obstacle)
 
     def init():
-        ax.add_patch(rect)
+        ax.add_patch(circle)
         time_text.set_text("")
         for obstacle in dynamic_obstacles_rects:
             obstacle.set_xy((-10, -10))
-        return [rect, time_text] + dynamic_obstacles_rects
+        return [circle, time_text] + dynamic_obstacles_rects
 
     def animate(i):
-        rect.set_xy((x_coords[i], y_coords[i]))
-        time_text.set_text(f"Time: {times[i]}")
+        circle.set_center((x_coords_interp[i] + 0.5, y_coords_interp[i] + 0.5))
+        time_text.set_text(f"Time: {times_interp[i]}")
 
         # Update dynamic obstacles
         for idx, obstacle_data in enumerate(input_data["dynamic_obstacles"]):
             start_time, end_time = obstacle_data[1]
-            if start_time <= times[i] and (end_time == -1 or end_time >= times[i]):
+            if start_time <= times_interp[i] and (
+                end_time == -1 or end_time >= times_interp[i]
+            ):
                 dynamic_obstacles_rects[idx].set_xy(obstacle_data[0])
             else:
                 dynamic_obstacles_rects[idx].set_xy(
                     (-10, -10)
                 )  # Move it out of the plot
 
-        return [rect, time_text] + dynamic_obstacles_rects
+        return [circle, time_text] + dynamic_obstacles_rects
 
     anim = animation.FuncAnimation(
         fig,
         animate,
         init_func=init,
-        frames=len(x_coords),
-        interval=500,
+        frames=len(x_coords_interp),
+        interval=500 / interp_steps,  # Adjusted interval for smoother transitions
         repeat=False,
         blit=True,
     )
