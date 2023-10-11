@@ -73,7 +73,13 @@ class ConflictBasedSearch:
             # if there is a conflict, generate two new nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
-                if len(cur_node.solution[agent_id]) <= conflict.time:
+                if (
+                    type(conflict) == VertexConflict
+                    and len(cur_node.solution[agent_id]) <= conflict.time
+                ) or (
+                    type(conflict) == EdgeConflict
+                    and len(cur_node.solution[agent_id]) <= conflict.times[1]
+                ):
                     continue
                 # generate child node from the current node
                 new_node = deepcopy(cur_node)

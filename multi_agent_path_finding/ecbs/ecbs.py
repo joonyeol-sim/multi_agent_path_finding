@@ -107,6 +107,7 @@ class EnhancedConflictBasedSearch:
 
             # select node from focal set
             cur_node = min(self.focal_set)
+            print(cur_node.cost, cur_node.lower_bound, cur_node.focal_heuristic)
             self.open_set.remove(cur_node)
             self.focal_set.remove(cur_node)
 
@@ -120,7 +121,13 @@ class EnhancedConflictBasedSearch:
             # if there is a conflict, generate two child nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
-                if len(cur_node.solution[agent_id]) <= conflict.time:
+                if (
+                    type(conflict) == VertexConflict
+                    and len(cur_node.solution[agent_id]) <= conflict.time
+                ) or (
+                    type(conflict) == EdgeConflict
+                    and len(cur_node.solution[agent_id]) <= conflict.times[1]
+                ):
                     continue
                 # generate child node from the current node
                 new_node = deepcopy(cur_node)
@@ -133,14 +140,15 @@ class EnhancedConflictBasedSearch:
                 # add constraint to the child node
                 new_node.constraints.setdefault(agent_id, []).append(new_constraint)
 
-                # generate new path for the agent that has the conflict
+                # update reservation table
+                self.env.reservation_table = new_node.solution
                 self.env.reservation_table[agent_id] = []
+                # generate new path for the agent that has the conflict
                 new_node.solution[agent_id], new_f_min = self.individual_planners[
                     agent_id
                 ].plan(constraints=new_node.constraints[agent_id])
                 if not new_node.solution[agent_id]:
                     continue
-                self.env.reservation_table[agent_id] = new_node.solution[agent_id]
 
                 # update cost, f_mins, lower_bound, and focal_heuristic
                 new_node.cost = self.calculate_cost(new_node.solution)
@@ -150,7 +158,6 @@ class EnhancedConflictBasedSearch:
 
                 # add the child node to the open set
                 self.open_set.add(new_node)
-                print(new_node.cost, new_node.lower_bound, new_node.focal_heuristic)
 
                 # add the child node to the focal set if its lower bound is lower than w * min_lower_bound
                 if new_node.cost <= self.w * min_lower_bound:
@@ -203,23 +210,20 @@ class EnhancedConflictBasedSearch:
                         time=time,
                     )
 
-        # Edge Conflict
-        for agent1, agent2 in combinations(range(self.robot_num), 2):
-            max_time = max(len(solution[agent1]), len(solution[agent2]))
-            for time in range(max_time - 1):
-                prev_point1 = self.get_state(agent1, time, solution)
-                next_point1 = self.get_state(agent1, time + 1, solution)
-                prev_point2 = self.get_state(agent2, time, solution)
-                next_point2 = self.get_state(agent2, time + 1, solution)
+                prev_point1 = self.get_state(agent1, time - 1, solution)
+                next_point1 = self.get_state(agent1, time, solution)
+                prev_point2 = self.get_state(agent2, time - 1, solution)
+                next_point2 = self.get_state(agent2, time, solution)
 
                 if prev_point1 == next_point2 and prev_point2 == next_point1:
+                    print("Edge Conflict")
                     return EdgeConflict(
                         agent_ids=[agent1, agent2],
                         points={
                             agent1: (prev_point1, next_point1),
                             agent2: (prev_point2, next_point2),
                         },
-                        times=(time, time + 1),
+                        times=(time - 1, time),
                     )
 
     def focal_heuristic(self, solution: List[List[Tuple[Point, int]]]) -> int:
@@ -232,14 +236,10 @@ class EnhancedConflictBasedSearch:
                 if point1 == point2:
                     num_of_conflicts += 1
 
-        # Edge Conflict
-        for agent1, agent2 in combinations(range(self.robot_num), 2):
-            max_time = max(len(solution[agent1]), len(solution[agent2]))
-            for time in range(max_time - 1):
-                prev_point1 = self.get_state(agent1, time, solution)
-                next_point1 = self.get_state(agent1, time + 1, solution)
-                prev_point2 = self.get_state(agent2, time, solution)
-                next_point2 = self.get_state(agent2, time + 1, solution)
+                prev_point1 = self.get_state(agent1, time - 1, solution)
+                next_point1 = self.get_state(agent1, time, solution)
+                prev_point2 = self.get_state(agent2, time - 1, solution)
+                next_point2 = self.get_state(agent2, time, solution)
 
                 if prev_point1 == next_point2 and prev_point2 == next_point1:
                     num_of_conflicts += 1

@@ -87,9 +87,11 @@ class SpaceTimeAstarEpsilon:
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
-                    neighbor.d_score = self.focal_vertex_heuristic(
-                        neighbor
-                    ) + self.focal_edge_heuristic(current, neighbor)
+                    neighbor.d_score = (
+                        current.d_score
+                        + self.focal_vertex_heuristic(neighbor)
+                        + self.focal_edge_heuristic(current, neighbor)
+                    )
                     if neighbor.f_score <= self.w * min_f_score:
                         self.focal_set.add(neighbor)
 
@@ -98,9 +100,11 @@ class SpaceTimeAstarEpsilon:
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
-                    neighbor.d_score = self.focal_vertex_heuristic(
-                        neighbor
-                    ) + self.focal_edge_heuristic(current, neighbor)
+                    neighbor.d_score = (
+                        current.d_score
+                        + self.focal_vertex_heuristic(neighbor)
+                        + self.focal_edge_heuristic(current, neighbor)
+                    )
 
         return None
 
