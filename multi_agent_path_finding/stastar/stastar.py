@@ -8,6 +8,7 @@ from multi_agent_path_finding.common.constraint import (
     EdgeConstraint,
 )
 from multi_agent_path_finding.stastar.node import Node
+import matplotlib.pyplot as plt
 
 
 class SpaceTimeAstar:
@@ -28,6 +29,9 @@ class SpaceTimeAstar:
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
 
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111, projection="3d")
+
     def plan(
         self, constraints: List[Constraint] = None
     ) -> List[Tuple[Point, int]] | None:
@@ -39,6 +43,8 @@ class SpaceTimeAstar:
             open_set.remove(current)
             closed_set.add(current)
             if current.point == self.goal_point:
+                # self.visualize(current, open_set, closed_set)
+                # plt.show()
                 return self.reconstruct_path(current)
             neighbors = self.get_neighbors(current, constraints)
             for neighbor in neighbors:
@@ -58,7 +64,97 @@ class SpaceTimeAstar:
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
 
+            # self.visualize(current, open_set, closed_set)
+
         return None
+
+    def visualize(self, node, open_set: Set[Node], closed_set: Set[Node]):
+        # Clear the plot
+        self.ax.clear()
+        time_limit = max(10, max([node.time for node in open_set | closed_set]))
+
+        # Plot obstacles
+        for time in range(time_limit):
+            self.ax.scatter(
+                [obstacle.point.x for obstacle in self.env.obstacles],
+                [obstacle.point.y for obstacle in self.env.obstacles],
+                [time for obstacle in self.env.obstacles],
+                c="black",
+                marker="x",
+            )
+
+        # Plot open set
+        self.ax.scatter(
+            [node.point.x for node in open_set],
+            [node.point.y for node in open_set],
+            [node.time for node in open_set],
+            c="b",
+            marker="x",
+            label="Open Set",
+        )
+
+        # Plot closed set
+        self.ax.scatter(
+            [node.point.x for node in closed_set],
+            [node.point.y for node in closed_set],
+            [node.time for node in closed_set],
+            c="r",
+            marker="o",
+            label="Closed Set",
+        )
+
+        # Plot current node
+        self.ax.scatter(
+            node.point.x,
+            node.point.y,
+            node.time,
+            c="g",
+            marker="o",
+            label="Current Node",
+        )
+
+        # Plot start and goal points without (x, o) markers
+        self.ax.scatter(
+            self.start_point.x,
+            self.start_point.y,
+            0,
+            c="g",
+            marker="^",
+            label="Start Point",
+        )
+
+        self.ax.scatter(
+            self.goal_point.x,
+            self.goal_point.y,
+            0,
+            c="r",
+            marker="^",
+            label="Goal Point",
+        )
+
+        # Plot tree edges
+        for node in open_set | closed_set:
+            if node.parent is not None:
+                self.ax.plot(
+                    [node.point.x, node.parent.point.x],
+                    [node.point.y, node.parent.point.y],
+                    [node.time, node.parent.time],
+                    c="y",
+                )
+
+        # Setting labels and title
+        self.ax.set_xlabel("X")
+        self.ax.set_ylabel("Y")
+        self.ax.set_zlabel("T")
+        self.ax.set_xlim([0, self.env.space_limit[0]])
+        self.ax.set_ylim([0, self.env.space_limit[1]])
+        # time_limit = 10
+        self.ax.set_zlim([0, time_limit])
+        self.ax.set_title("3D Grid Map Visualization")
+        self.ax.legend()
+
+        # Show the plot
+        plt.pause(0.5)
 
     def heuristic(self, node) -> int:
         # return manhattan distance

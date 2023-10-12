@@ -1,7 +1,8 @@
-from copy import deepcopy
+from copy import deepcopy, copy
 from itertools import combinations
 from typing import List, Tuple, Set
 import heapq
+import matplotlib.pyplot as plt
 
 from multi_agent_path_finding.common.conflict import (
     Conflict,
@@ -16,12 +17,12 @@ from multi_agent_path_finding.common.constraint import (
 from multi_agent_path_finding.common.environment import Environment
 from multi_agent_path_finding.common.point import Point
 from multi_agent_path_finding.ecbs.ct_node import CTNode
-from multi_agent_path_finding.stastar_epsilon.stastar_epsilon import (
-    SpaceTimeAstarEpsilon,
+from multi_agent_path_finding.stastar_epsilon_dp.stastar_epsilon_dp import (
+    SpaceTimeAstarEpsilonDP,
 )
 
 
-class EnhancedConflictBasedSearch:
+class EnhancedConflictBasedSearchDP:
     def __init__(
         self,
         start_points: List[Point],
@@ -43,10 +44,9 @@ class EnhancedConflictBasedSearch:
 
         self.open_set: List[CTNode] = list()
         self.focal_set: List[CTNode] = list()
-        self.individual_planners = [
-            SpaceTimeAstarEpsilon(start_point, goal_point, env, w)
-            for start_point, goal_point in zip(start_points, goal_points)
-        ]
+
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111, projection="3d")
 
         for start_point, goal_point in zip(start_points, goal_points):
             if env.dimension != len(start_point.__dict__.keys()):
@@ -74,7 +74,13 @@ class EnhancedConflictBasedSearch:
             lower_bound=0,
             focal_heuristic=0,
         )
-        for agent_id, individual_planner in enumerate(self.individual_planners):
+
+        root_node.individual_planners = [
+            SpaceTimeAstarEpsilonDP(start_point, goal_point, self.env, self.w)
+            for start_point, goal_point in zip(self.start_points, self.goal_points)
+        ]
+
+        for agent_id, individual_planner in enumerate(root_node.individual_planners):
             path, f_min = individual_planner.plan()
             if not path:
                 print(f"Agent {agent_id} failed to find a path")
@@ -130,7 +136,18 @@ class EnhancedConflictBasedSearch:
                 ):
                     continue
                 # generate child node from the current node
-                new_node = deepcopy(cur_node)
+                new_node = CTNode(
+                    constraints=deepcopy(cur_node.constraints),
+                    solution=deepcopy(cur_node.solution),
+                    cost=cur_node.cost,
+                    f_mins=deepcopy(cur_node.f_mins),
+                    lower_bound=cur_node.lower_bound,
+                    focal_heuristic=cur_node.focal_heuristic,
+                )
+                new_node.individual_planners = copy(cur_node.individual_planners)
+                new_node.individual_planners[agent_id] = deepcopy(
+                    cur_node.individual_planners[agent_id]
+                )
 
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
@@ -140,11 +157,64 @@ class EnhancedConflictBasedSearch:
                 # add constraint to the child node
                 new_node.constraints.setdefault(agent_id, []).append(new_constraint)
 
+                # pruning node from the new constraint
+                pruning_node = None
+                if type(conflict) == VertexConflict:
+                    pruning_point = new_node.solution[agent_id][conflict.time][0]
+                    pruning_time = new_node.solution[agent_id][conflict.time][1]
+
+                else:
+                    pruning_point = new_node.solution[agent_id][conflict.times[1]][0]
+                    pruning_time = new_node.solution[agent_id][conflict.times[1]][1]
+
+                for closed_node in new_node.individual_planners[agent_id].closed_set:
+                    if (
+                        closed_node.point == pruning_point
+                        and closed_node.time == pruning_time
+                    ):
+                        pruning_node = closed_node
+                        break
+
+                print(
+                    "Before pruning, len of open set:",
+                    len(new_node.individual_planners[agent_id].open_set),
+                )
+                print(
+                    "Before pruning, len of focal set:",
+                    len(new_node.individual_planners[agent_id].focal_set),
+                )
+                print(
+                    "Before pruning, len of closed set:",
+                    len(new_node.individual_planners[agent_id].closed_set),
+                )
+                self.prune_successor(
+                    pruning_node,
+                    pruning_node,
+                    new_node.individual_planners[agent_id].open_set,
+                    new_node.individual_planners[agent_id].focal_set,
+                    new_node.individual_planners[agent_id].closed_set,
+                    agent_id,
+                )
+                print(
+                    "After pruning, len of open set:",
+                    len(new_node.individual_planners[agent_id].open_set),
+                )
+                print(
+                    "After pruning, len of focal set:",
+                    len(new_node.individual_planners[agent_id].focal_set),
+                )
+                print(
+                    "After pruning, len of closed set:",
+                    len(new_node.individual_planners[agent_id].closed_set),
+                )
+
+                pruning_node.parent.children.remove(pruning_node)
+
                 # update reservation table
                 self.env.reservation_table = new_node.solution
                 self.env.reservation_table[agent_id] = []
                 # generate new path for the agent that has the conflict
-                new_node.solution[agent_id], new_f_min = self.individual_planners[
+                new_node.solution[agent_id], new_f_min = new_node.individual_planners[
                     agent_id
                 ].plan(constraints=new_node.constraints[agent_id])
                 if not new_node.solution[agent_id]:
@@ -163,6 +233,122 @@ class EnhancedConflictBasedSearch:
                 if new_node.cost <= self.w * min_lower_bound:
                     heapq.heappush(self.focal_set, new_node)
         return None
+
+    def prune_successor(
+        self, conflict_node, node, open_set, focal_set, closed_set, agent_id
+    ):
+        while node.children:
+            child = node.children.pop(0)
+            self.prune_successor(
+                conflict_node, child, open_set, focal_set, closed_set, agent_id
+            )
+
+        self.visualize(conflict_node, node, open_set, closed_set, agent_id)
+
+        if node in open_set:
+            open_set.remove(node)
+            if node in focal_set:
+                focal_set.remove(node)
+        else:
+            closed_set.remove(node)
+
+    def visualize(self, conflict_node, node, open_set, closed_set, agent_id):
+        # Clear the plot
+        self.ax.clear()
+        time_limit = max(10, max([node.time for node in open_set | closed_set]))
+
+        # Plot obstacles
+        for time in range(time_limit):
+            self.ax.scatter(
+                [obstacle.point.x for obstacle in self.env.obstacles],
+                [obstacle.point.y for obstacle in self.env.obstacles],
+                [time for obstacle in self.env.obstacles],
+                c="black",
+                marker="x",
+            )
+
+        # Plot open set
+        self.ax.scatter(
+            [node.point.x for node in open_set],
+            [node.point.y for node in open_set],
+            [node.time for node in open_set],
+            c="b",
+            marker="x",
+            label="Open Set",
+        )
+
+        # Plot closed set
+        self.ax.scatter(
+            [node.point.x for node in closed_set],
+            [node.point.y for node in closed_set],
+            [node.time for node in closed_set],
+            c="r",
+            marker="o",
+            label="Closed Set",
+        )
+
+        # Plot current node
+        self.ax.scatter(
+            node.point.x,
+            node.point.y,
+            node.time,
+            c="g",
+            marker="o",
+            label="Current Node",
+        )
+
+        # Plot conflict node highlight with size
+        self.ax.scatter(
+            conflict_node.point.x,
+            conflict_node.point.y,
+            conflict_node.time,
+            c="cyan",
+            marker="o",
+            s=100,
+        )
+
+        # Plot start and goal points without (x, o) markers
+        self.ax.scatter(
+            self.start_points[agent_id].x,
+            self.start_points[agent_id].y,
+            0,
+            c="g",
+            marker="^",
+            label="Start Point",
+        )
+
+        self.ax.scatter(
+            self.goal_points[agent_id].x,
+            self.goal_points[agent_id].y,
+            0,
+            c="r",
+            marker="^",
+            label="Goal Point",
+        )
+
+        # Plot tree edges
+        for node in open_set | closed_set:
+            if node.parent is not None:
+                self.ax.plot(
+                    [node.point.x, node.parent.point.x],
+                    [node.point.y, node.parent.point.y],
+                    [node.time, node.parent.time],
+                    c="y",
+                )
+
+        # Setting labels and title
+        self.ax.set_xlabel("X")
+        self.ax.set_ylabel("Y")
+        self.ax.set_zlabel("T")
+        self.ax.set_xlim([0, self.env.space_limit[0]])
+        self.ax.set_ylim([0, self.env.space_limit[1]])
+        # time_limit = 10
+        self.ax.set_zlim([0, time_limit])
+        self.ax.set_title("3D Grid Map Visualization")
+        self.ax.legend()
+
+        # Show the plot
+        plt.pause(0.01)
 
     @staticmethod
     def generate_constraint_from_conflict(

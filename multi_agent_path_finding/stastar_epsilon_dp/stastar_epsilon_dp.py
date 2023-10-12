@@ -8,6 +8,10 @@ from multi_agent_path_finding.common.constraint import (
 from multi_agent_path_finding.common.environment import Environment
 from multi_agent_path_finding.common.point import Point
 from multi_agent_path_finding.stastar_epsilon_dp.node import Node
+import matplotlib.pyplot as plt
+
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
 
 
 class SpaceTimeAstarEpsilonDP:
@@ -41,20 +45,19 @@ class SpaceTimeAstarEpsilonDP:
     def plan(
         self, constraints: List[Constraint] = None
     ) -> Tuple[List[Tuple[Point, int]], int] | None:
-        self.open_set.clear()
-        self.focal_set.clear()
-        self.closed_set.clear()
+        if constraints is None:
+            start_node = Node(self.start_point, 0)
+            start_node.parent = None
+            start_node.g_score = 0
+            start_node.h_score = self.heuristic(start_node)
+            start_node.f_score = start_node.g_score + start_node.h_score
+            start_node.d_score = 0
 
-        start_node = Node(self.start_point, 0)
-        start_node.parent = None
-        start_node.g_score = 0
-        start_node.h_score = self.heuristic(start_node)
-        start_node.f_score = start_node.g_score + start_node.h_score
-        start_node.d_score = 0
-
-        self.open_set.add(start_node)
-        self.focal_set.add(start_node)
-        min_f_score = start_node.f_score
+            self.open_set.add(start_node)
+            self.focal_set.add(start_node)
+            min_f_score = start_node.f_score
+        else:
+            min_f_score = min([node.f_score for node in self.open_set])
 
         while self.open_set:
             # update focal set if min_f_score has increased
@@ -114,7 +117,116 @@ class SpaceTimeAstarEpsilonDP:
                         + self.focal_edge_heuristic(current, neighbor)
                     )
 
+            self.visualize(current, self.open_set, self.closed_set, constraints)
+
         return None
+
+    def visualize(self, node, open_set: Set[Node], closed_set: Set[Node], constraints):
+        # Clear the plot
+        ax.clear()
+        time_limit = max(10, max([node.time for node in open_set | closed_set]))
+
+        # Plot obstacles
+        for time in range(time_limit):
+            ax.scatter(
+                [obstacle.point.x for obstacle in self.env.obstacles],
+                [obstacle.point.y for obstacle in self.env.obstacles],
+                [time for obstacle in self.env.obstacles],
+                c="black",
+                marker="x",
+            )
+
+        # Plot constraints
+        if constraints is not None:
+            for constraint in constraints:
+                if isinstance(constraint, VertexConstraint):
+                    ax.scatter(
+                        constraint.point.x,
+                        constraint.point.y,
+                        constraint.time,
+                        c="r",
+                        marker="x",
+                    )
+                elif isinstance(constraint, EdgeConstraint):
+                    ax.plot(
+                        [constraint.points[0].x, constraint.points[1].x],
+                        [constraint.points[0].y, constraint.points[1].y],
+                        [constraint.times[0], constraint.times[1]],
+                        c="r",
+                    )
+
+        # Plot open set
+        ax.scatter(
+            [node.point.x for node in open_set],
+            [node.point.y for node in open_set],
+            [node.time for node in open_set],
+            c="b",
+            marker="x",
+            label="Open Set",
+        )
+
+        # Plot closed set
+        ax.scatter(
+            [node.point.x for node in closed_set],
+            [node.point.y for node in closed_set],
+            [node.time for node in closed_set],
+            c="r",
+            marker="o",
+            label="Closed Set",
+        )
+
+        # Plot current node
+        ax.scatter(
+            node.point.x,
+            node.point.y,
+            node.time,
+            c="g",
+            marker="o",
+            label="Current Node",
+        )
+
+        # Plot start and goal points without (x, o) markers
+        ax.scatter(
+            self.start_point.x,
+            self.start_point.y,
+            0,
+            c="g",
+            marker="^",
+            label="Start Point",
+        )
+
+        ax.scatter(
+            self.goal_point.x,
+            self.goal_point.y,
+            0,
+            c="r",
+            marker="^",
+            label="Goal Point",
+        )
+
+        # Plot tree edges
+        for node in open_set | closed_set:
+            if node.parent is not None:
+                ax.plot(
+                    [node.point.x, node.parent.point.x],
+                    [node.point.y, node.parent.point.y],
+                    [node.time, node.parent.time],
+                    c="y",
+                )
+
+        # Setting labels and title
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("T")
+        ax.set_xlim([0, self.env.space_limit[0]])
+        ax.set_ylim([0, self.env.space_limit[1]])
+        # time_limit = 10
+        ax.set_zlim([0, time_limit])
+        ax.set_title("3D Grid Map Visualization")
+        ax.legend()
+
+        # Show the plot
+        plt.pause(0.01)
 
     def heuristic(self, node) -> int:
         # return manhattan distance

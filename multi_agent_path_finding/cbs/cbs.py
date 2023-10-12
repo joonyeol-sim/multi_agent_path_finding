@@ -1,5 +1,5 @@
 from copy import deepcopy
-from heapq import heappush
+import heapq
 from itertools import combinations
 from typing import List, Tuple, Set
 
@@ -34,7 +34,7 @@ class ConflictBasedSearch:
         self.robot_num = len(start_points)
         self.env = env
 
-        self.open_set: Set[CTNode] = set()
+        self.open_set: List[CTNode] = list()
         self.individual_planners = [
             SpaceTimeAstar(start_point, goal_point, env)
             for start_point, goal_point in zip(start_points, goal_points)
@@ -56,18 +56,19 @@ class ConflictBasedSearch:
         root_node.cost = self.calculate_cost(root_node.solution)
 
         # put root node into the priority queue
-        self.open_set.add(root_node)
+        heapq.heappush(self.open_set, root_node)
 
+        ct_size = 1
         while self.open_set:
             # pop the node with the lowest cost
-            cur_node = min(self.open_set)
-            self.open_set.remove(cur_node)
+            cur_node = self.open_set.pop(0)
 
             # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
 
             # if there is no conflict, return the solution
             if not conflict:
+                print(f"CT size: {ct_size}")
                 return cur_node.solution
 
             # if there is a conflict, generate two new nodes
@@ -97,7 +98,8 @@ class ConflictBasedSearch:
                 if not new_node.solution[agent_id]:
                     continue
                 new_node.cost = self.calculate_cost(new_node.solution)
-                self.open_set.add(new_node)
+                heapq.heappush(self.open_set, new_node)
+                ct_size += 1
                 print(new_node.cost)
         return None
 
