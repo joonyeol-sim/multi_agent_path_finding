@@ -16,7 +16,7 @@ from multi_agent_path_finding.common.constraint import (
 )
 from multi_agent_path_finding.common.environment import Environment
 from multi_agent_path_finding.common.point import Point
-from multi_agent_path_finding.ecbs.ct_node import CTNode
+from multi_agent_path_finding.ecbs_dp.ct_node import CTNode
 from multi_agent_path_finding.stastar_epsilon_dp.stastar_epsilon_dp import (
     SpaceTimeAstarEpsilonDP,
 )
@@ -73,6 +73,7 @@ class EnhancedConflictBasedSearchDP:
             f_mins=[],
             lower_bound=0,
             focal_heuristic=0,
+            individual_planners=[]
         )
 
         root_node.individual_planners = [
@@ -114,7 +115,7 @@ class EnhancedConflictBasedSearchDP:
 
             # select node from focal set
             cur_node = heapq.heappop(self.focal_set)
-            print(cur_node.cost, cur_node.lower_bound, cur_node.focal_heuristic)
+            print(cur_node)
             self.open_set.remove(cur_node)
 
             # find the first conflict
@@ -143,11 +144,12 @@ class EnhancedConflictBasedSearchDP:
                     f_mins=deepcopy(cur_node.f_mins),
                     lower_bound=cur_node.lower_bound,
                     focal_heuristic=cur_node.focal_heuristic,
+                    individual_planners=deepcopy(cur_node.individual_planners)
                 )
-                new_node.individual_planners = copy(cur_node.individual_planners)
-                new_node.individual_planners[agent_id] = deepcopy(
-                    cur_node.individual_planners[agent_id]
-                )
+                # new_node.individual_planners = copy(cur_node.individual_planners)
+                # new_node.individual_planners[agent_id] = deepcopy(
+                #     cur_node.individual_planners[agent_id]
+                # )
 
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
@@ -175,18 +177,6 @@ class EnhancedConflictBasedSearchDP:
                         pruning_node = closed_node
                         break
 
-                print(
-                    "Before pruning, len of open set:",
-                    len(new_node.individual_planners[agent_id].open_set),
-                )
-                print(
-                    "Before pruning, len of focal set:",
-                    len(new_node.individual_planners[agent_id].focal_set),
-                )
-                print(
-                    "Before pruning, len of closed set:",
-                    len(new_node.individual_planners[agent_id].closed_set),
-                )
                 self.prune_successor(
                     pruning_node,
                     pruning_node,
@@ -194,18 +184,7 @@ class EnhancedConflictBasedSearchDP:
                     new_node.individual_planners[agent_id].focal_set,
                     new_node.individual_planners[agent_id].closed_set,
                     agent_id,
-                )
-                print(
-                    "After pruning, len of open set:",
-                    len(new_node.individual_planners[agent_id].open_set),
-                )
-                print(
-                    "After pruning, len of focal set:",
-                    len(new_node.individual_planners[agent_id].focal_set),
-                )
-                print(
-                    "After pruning, len of closed set:",
-                    len(new_node.individual_planners[agent_id].closed_set),
+                    new_constraint
                 )
 
                 pruning_node.parent.children.remove(pruning_node)
@@ -235,15 +214,15 @@ class EnhancedConflictBasedSearchDP:
         return None
 
     def prune_successor(
-        self, conflict_node, node, open_set, focal_set, closed_set, agent_id
+        self, conflict_node, node, open_set, focal_set, closed_set, agent_id, constraint
     ):
         while node.children:
             child = node.children.pop(0)
             self.prune_successor(
-                conflict_node, child, open_set, focal_set, closed_set, agent_id
+                conflict_node, child, open_set, focal_set, closed_set, agent_id, constraint
             )
 
-        self.visualize(conflict_node, node, open_set, closed_set, agent_id)
+        # self.visualize(conflict_node, node, open_set, closed_set, agent_id)
 
         if node in open_set:
             open_set.remove(node)
@@ -402,7 +381,6 @@ class EnhancedConflictBasedSearchDP:
                 next_point2 = self.get_state(agent2, time, solution)
 
                 if prev_point1 == next_point2 and prev_point2 == next_point1:
-                    print("Edge Conflict")
                     return EdgeConflict(
                         agent_ids=[agent1, agent2],
                         points={

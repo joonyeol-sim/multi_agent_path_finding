@@ -108,12 +108,11 @@ class EnhancedConflictBasedSearch:
 
             # select node from focal set
             cur_node = heapq.heappop(self.focal_set)
-            print(cur_node.cost, cur_node.lower_bound, cur_node.focal_heuristic)
+            print(cur_node)
             self.open_set.remove(cur_node)
 
             # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
-
             # if there is no conflict, return the solution
             if not conflict:
                 return cur_node.solution, min_lower_bound
@@ -216,7 +215,6 @@ class EnhancedConflictBasedSearch:
                 next_point2 = self.get_state(agent2, time, solution)
 
                 if prev_point1 == next_point2 and prev_point2 == next_point1:
-                    print("Edge Conflict")
                     return EdgeConflict(
                         agent_ids=[agent1, agent2],
                         points={

@@ -44,7 +44,7 @@ class SpaceTimeAstarEpsilonDP:
 
     def plan(
         self, constraints: List[Constraint] = None
-    ) -> Tuple[List[Tuple[Point, int]], int] | None:
+    ) -> Tuple[List[Tuple[Point, int]], int]:
         if constraints is None:
             start_node = Node(self.start_point, 0)
             start_node.parent = None
@@ -117,7 +117,7 @@ class SpaceTimeAstarEpsilonDP:
                         + self.focal_edge_heuristic(current, neighbor)
                     )
 
-            self.visualize(current, self.open_set, self.closed_set, constraints)
+            # self.visualize(current, self.open_set, self.closed_set, constraints)
 
         return None
 
