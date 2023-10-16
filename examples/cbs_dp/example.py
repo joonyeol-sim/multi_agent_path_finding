@@ -2,7 +2,7 @@ import yaml
 import time
 from multi_agent_path_finding.common.environment import Environment
 from multi_agent_path_finding.common.point import Point2D, Point3D
-from multi_agent_path_finding.cbs.cbs import ConflictBasedSearch
+from multi_agent_path_finding.cbs_dp.cbs_dp import ConflictBasedSearchDP
 
 if __name__ == "__main__":
     import argparse
@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     start_points = [Point(*start_point) for start_point in input_data["start_points"]]
     goal_points = [Point(*goal_point) for goal_point in input_data["goal_points"]]
-    planner = ConflictBasedSearch(
+    planner = ConflictBasedSearchDP(
         start_points,
         goal_points,
         environment,

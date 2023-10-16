@@ -59,10 +59,12 @@ class ConflictBasedSearchDP:
 
         # put root node into the priority queue
         heapq.heappush(self.open_set, root_node)
+        ct_size = 0
         while self.open_set:
             # pop the node with the lowest cost
-            cur_node = heapq.heappush(self.open_set)
+            cur_node = heapq.heappop(self.open_set)
             print(f"Current cost: {cur_node.cost}")
+            print(f"CT size: {ct_size}")
 
             # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
@@ -100,7 +102,6 @@ class ConflictBasedSearchDP:
                 )
 
                 # pruning node from the new constraint
-                # pruning node from the new constraint
                 pruning_node = None
                 if type(conflict) == VertexConflict:
                     pruning_point = new_node.solution[agent_id][conflict.time][0]
@@ -128,14 +129,14 @@ class ConflictBasedSearchDP:
                     new_node.individual_planners[agent_id].closed_set,
                 )
 
-                new_node.solution[agent_id] = self.individual_planners[agent_id].plan(
-                    constraints=new_node.constraints[agent_id]
-                )
+                new_node.solution[agent_id] = new_node.individual_planners[
+                    agent_id
+                ].plan(constraints=new_node.constraints[agent_id])
                 if not new_node.solution[agent_id]:
                     continue
                 new_node.cost = self.calculate_cost(new_node.solution)
                 heapq.heappush(self.open_set, new_node)
-                print(new_node.cost)
+                ct_size += 1
         return None
 
     def prune_successor(self, node, open_set, closed_set):
@@ -146,13 +147,14 @@ class ConflictBasedSearchDP:
         if node in open_set:
             open_set.remove(node)
             node.parent = None
-        else:
+        if node in closed_set:
             closed_set.remove(node)
-            if not node.children:
-                open_set.add(node)
-                node.parent.children.append(node)
-            else:
-                node.parent = None
+            node.parent = None
+            # if not node.children:
+            #     open_set.add(node)
+            #     node.parent.children.append(node)
+            # else:
+            #     node.parent = None
 
     @staticmethod
     def generate_constraint_from_conflict(
