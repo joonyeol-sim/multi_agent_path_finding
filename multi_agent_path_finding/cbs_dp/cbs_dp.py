@@ -1,3 +1,4 @@
+import time
 from copy import deepcopy, copy
 import heapq
 from itertools import combinations
@@ -73,6 +74,7 @@ class ConflictBasedSearchDP:
             if not conflict:
                 return cur_node.solution
 
+            start_time = time.time()
             # if there is a conflict, generate two new nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
@@ -92,9 +94,11 @@ class ConflictBasedSearchDP:
                     individual_planners=list(),
                 )
                 new_node.individual_planners = copy(cur_node.individual_planners)
+                deepcopy_start_time = time.time()
                 new_node.individual_planners[agent_id] = deepcopy(
                     cur_node.individual_planners[agent_id]
                 )
+                print(f"Deepcopy time: {time.time() - deepcopy_start_time}")
 
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
@@ -128,6 +132,8 @@ class ConflictBasedSearchDP:
                     new_node.individual_planners[agent_id].open_set,
                     new_node.individual_planners[agent_id].closed_set,
                 )
+                pruning_node.parent.children.remove(pruning_node)
+                pruning_node.parent = None
 
                 new_node.solution[agent_id] = new_node.individual_planners[
                     agent_id
@@ -137,19 +143,19 @@ class ConflictBasedSearchDP:
                 new_node.cost = self.calculate_cost(new_node.solution)
                 heapq.heappush(self.open_set, new_node)
                 ct_size += 1
+            print(f"Time elapsed: {time.time() - start_time}")
         return None
 
     def prune_successor(self, node, open_set, closed_set):
         while node.children:
             child = node.children.pop(0)
+            child.parent = None
             self.prune_successor(child, open_set, closed_set)
 
         if node in open_set:
             open_set.remove(node)
-            node.parent = None
-        if node in closed_set:
+        else:
             closed_set.remove(node)
-            node.parent = None
             # if not node.children:
             #     open_set.add(node)
             #     node.parent.children.append(node)

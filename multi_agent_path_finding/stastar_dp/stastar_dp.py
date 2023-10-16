@@ -42,9 +42,6 @@ class SpaceTimeAstarDP:
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
 
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, projection="3d")
-
     def plan(
         self, constraints: List[Constraint] = None
     ) -> List[Tuple[Point, int]] | None:

@@ -1,3 +1,4 @@
+import time
 from copy import deepcopy
 import heapq
 from itertools import combinations
@@ -71,6 +72,7 @@ class ConflictBasedSearch:
             if not conflict:
                 return cur_node.solution
 
+            start_time = time.time()
             # if there is a conflict, generate two new nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
@@ -83,7 +85,9 @@ class ConflictBasedSearch:
                 ):
                     continue
                 # generate child node from the current node
+                deepcopy_start_time = time.time()
                 new_node = deepcopy(cur_node)
+                print(f"Deepcopy time: {time.time() - deepcopy_start_time}")
 
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
@@ -100,6 +104,7 @@ class ConflictBasedSearch:
                 new_node.cost = self.calculate_cost(new_node.solution)
                 heapq.heappush(self.open_set, new_node)
                 ct_size += 1
+            print(f"Time elapsed: {time.time() - start_time}")
         return None
 
     @staticmethod
