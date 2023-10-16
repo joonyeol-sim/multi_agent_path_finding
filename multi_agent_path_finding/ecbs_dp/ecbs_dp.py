@@ -73,7 +73,7 @@ class EnhancedConflictBasedSearchDP:
             f_mins=[],
             lower_bound=0,
             focal_heuristic=0,
-            individual_planners=[]
+            individual_planners=[],
         )
 
         root_node.individual_planners = [
@@ -115,7 +115,7 @@ class EnhancedConflictBasedSearchDP:
 
             # select node from focal set
             cur_node = heapq.heappop(self.focal_set)
-            print(cur_node)
+            print(f"Current node: {cur_node.focal_heuristic}, {cur_node.cost}")
             self.open_set.remove(cur_node)
 
             # find the first conflict
@@ -144,20 +144,17 @@ class EnhancedConflictBasedSearchDP:
                     f_mins=deepcopy(cur_node.f_mins),
                     lower_bound=cur_node.lower_bound,
                     focal_heuristic=cur_node.focal_heuristic,
-                    individual_planners=deepcopy(cur_node.individual_planners)
+                    individual_planners=list(),
                 )
-                # new_node.individual_planners = copy(cur_node.individual_planners)
-                # new_node.individual_planners[agent_id] = deepcopy(
-                #     cur_node.individual_planners[agent_id]
-                # )
+                new_node.individual_planners = copy(cur_node.individual_planners)
+                new_node.individual_planners[agent_id] = deepcopy(
+                    cur_node.individual_planners[agent_id]
+                )
 
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
                     agent_id, conflict
                 )
-
-                # add constraint to the child node
-                new_node.constraints.setdefault(agent_id, []).append(new_constraint)
 
                 # pruning node from the new constraint
                 pruning_node = None
@@ -177,6 +174,23 @@ class EnhancedConflictBasedSearchDP:
                         pruning_node = closed_node
                         break
 
+                # add constraint to the child node
+                new_node.constraints.setdefault(agent_id, []).append(new_constraint)
+
+                # update reservation table
+                new_node.individual_planners[
+                    agent_id
+                ].env.reservation_table = new_node.solution
+                new_node.individual_planners[agent_id].env.reservation_table[
+                    agent_id
+                ] = []
+
+                # update d_score of the individual planner
+                self.update_d_score(
+                    new_node.individual_planners[agent_id].start_node,
+                    new_node.individual_planners[agent_id],
+                )
+
                 self.prune_successor(
                     pruning_node,
                     pruning_node,
@@ -184,14 +198,13 @@ class EnhancedConflictBasedSearchDP:
                     new_node.individual_planners[agent_id].focal_set,
                     new_node.individual_planners[agent_id].closed_set,
                     agent_id,
-                    new_constraint
+                    new_constraint,
                 )
-
                 pruning_node.parent.children.remove(pruning_node)
+                pruning_node.parent = None
+                if not new_node.individual_planners[agent_id].open_set:
+                    continue
 
-                # update reservation table
-                self.env.reservation_table = new_node.solution
-                self.env.reservation_table[agent_id] = []
                 # generate new path for the agent that has the conflict
                 new_node.solution[agent_id], new_f_min = new_node.individual_planners[
                     agent_id
@@ -213,21 +226,65 @@ class EnhancedConflictBasedSearchDP:
                     heapq.heappush(self.focal_set, new_node)
         return None
 
+    def update_d_score(self, node, planner):
+        if node.parent is not None:
+            node.d_score = (
+                node.parent.d_score
+                + planner.focal_vertex_heuristic(node)
+                + planner.focal_edge_heuristic(node.parent, node)
+            )
+
+        for child in node.children:
+            self.update_d_score(child, planner)
+
     def prune_successor(
         self, conflict_node, node, open_set, focal_set, closed_set, agent_id, constraint
     ):
         while node.children:
             child = node.children.pop(0)
+            # child.parent = None
             self.prune_successor(
-                conflict_node, child, open_set, focal_set, closed_set, agent_id, constraint
+                conflict_node,
+                child,
+                open_set,
+                focal_set,
+                closed_set,
+                agent_id,
+                constraint,
             )
-
         # self.visualize(conflict_node, node, open_set, closed_set, agent_id)
+        # if (
+        #     conflict_node.point.x == 2
+        #     and conflict_node.point.y == 2
+        #     and conflict_node.time == 2
+        #     and agent_id == 0
+        # ):
+        #     self.visualize(conflict_node, node, open_set, closed_set, agent_id)
 
         if node in open_set:
-            open_set.remove(node)
-            if node in focal_set:
-                focal_set.remove(node)
+            neighbors = []
+            for closed_node in closed_set:
+                if (
+                    abs(node.point.x - closed_node.point.x) <= 1
+                    and abs(node.point.y - closed_node.point.y) <= 1
+                    and node.time - closed_node.time == 1
+                ):
+                    neighbors.append(closed_node)
+            # set shortest neighbor which has min g_score in neighbors
+            shortest_neighbor = None
+            for neighbor in neighbors:
+                if (
+                    shortest_neighbor is None
+                    or neighbor.g_score < shortest_neighbor.g_score
+                ):
+                    shortest_neighbor = neighbor
+            if shortest_neighbor:
+                node.parent = shortest_neighbor
+                shortest_neighbor.children.append(node)
+            else:
+                open_set.remove(node)
+                if node in focal_set:
+                    focal_set.remove(node)
         else:
             closed_set.remove(node)
 
@@ -252,7 +309,7 @@ class EnhancedConflictBasedSearchDP:
             [node.point.y for node in open_set],
             [node.time for node in open_set],
             c="b",
-            marker="x",
+            marker="o",
             label="Open Set",
         )
 

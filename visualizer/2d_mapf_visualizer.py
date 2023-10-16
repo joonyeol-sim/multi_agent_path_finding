@@ -1,10 +1,12 @@
+import math
+
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import yaml
 import numpy as np
 
 
-def cbs_animate(input_data, path_data, interp_steps=10):
+def cbs_animate(input_data, path_data, interp_steps=100):
     # Calculate interpolated coordinates for smoother transitions
     x_coords_list_interp = []
     y_coords_list_interp = []
@@ -36,7 +38,7 @@ def cbs_animate(input_data, path_data, interp_steps=10):
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.set_xlim(0, input_data["space_limits"][0])
     ax.set_ylim(0, input_data["space_limits"][1])
-    ax.grid(True, which="both", linestyle="-", linewidth=2)
+    ax.grid(True, which="both", linestyle="-", linewidth=1)
     ax.set_xticks(range(input_data["space_limits"][0] + 1))
     ax.set_yticks(range(input_data["space_limits"][1] + 1))
     ax.set_aspect("equal")
@@ -77,7 +79,7 @@ def cbs_animate(input_data, path_data, interp_steps=10):
         y_coords,
     ) in enumerate(zip(x_coords_list_interp, y_coords_list_interp)):
         circle = plt.Circle(
-            (x_coords[0] + 0.5, y_coords[0] + 0.5), 0.5, facecolor="blue"
+            (x_coords[0] + 0.5, y_coords[0] + 0.5), math.sqrt(2) / 4, facecolor="blue"
         )
         circles.append(circle)
         agent_text = ax.text(

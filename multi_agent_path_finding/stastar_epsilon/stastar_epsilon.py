@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
 
+
 class SpaceTimeAstarEpsilon:
     def __init__(
         self, start_point: Point, goal_point: Point, env: Environment, w: float
@@ -113,7 +114,6 @@ class SpaceTimeAstarEpsilon:
             # self.visualize(current, self.open_set, self.closed_set, constraints)
 
         return None
-
 
     def visualize(self, node, open_set: Set[Node], closed_set: Set[Node], constraints):
         # Clear the plot
@@ -220,7 +220,7 @@ class SpaceTimeAstarEpsilon:
         ax.legend()
 
         # Show the plot
-        plt.pause(0.01)
+        plt.pause(0.1)
 
     def heuristic(self, node) -> int:
         # return manhattan distance

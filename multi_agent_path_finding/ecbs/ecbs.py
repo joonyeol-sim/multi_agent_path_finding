@@ -108,7 +108,7 @@ class EnhancedConflictBasedSearch:
 
             # select node from focal set
             cur_node = heapq.heappop(self.focal_set)
-            print(cur_node)
+            print(f"Current node: {cur_node.focal_heuristic}, {cur_node.cost}")
             self.open_set.remove(cur_node)
 
             # find the first conflict
