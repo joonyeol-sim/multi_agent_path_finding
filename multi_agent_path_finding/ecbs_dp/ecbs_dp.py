@@ -202,8 +202,17 @@ class EnhancedConflictBasedSearchDP:
                 )
                 pruning_node.parent.children.remove(pruning_node)
                 pruning_node.parent = None
-                if not new_node.individual_planners[agent_id].open_set:
-                    continue
+
+                # reconstruct focal set
+                new_min_f_score = min(
+                    [
+                        node.f_score
+                        for node in new_node.individual_planners[agent_id].open_set
+                    ]
+                )
+                for node in new_node.individual_planners[agent_id].open_set:
+                    if node.f_score <= new_min_f_score * self.w:
+                        new_node.individual_planners[agent_id].focal_set.add(node)
 
                 # generate new path for the agent that has the conflict
                 new_node.solution[agent_id], new_f_min = new_node.individual_planners[
@@ -253,40 +262,19 @@ class EnhancedConflictBasedSearchDP:
                 constraint,
             )
         # self.visualize(conflict_node, node, open_set, closed_set, agent_id)
-        # if (
-        #     conflict_node.point.x == 2
-        #     and conflict_node.point.y == 2
-        #     and conflict_node.time == 2
-        #     and agent_id == 0
-        # ):
-        #     self.visualize(conflict_node, node, open_set, closed_set, agent_id)
+        if not open_set:
+            self.visualize(conflict_node, node, open_set, closed_set, agent_id)
+            plt.show()
 
         if node in open_set:
-            neighbors = []
-            for closed_node in closed_set:
-                if (
-                    abs(node.point.x - closed_node.point.x) <= 1
-                    and abs(node.point.y - closed_node.point.y) <= 1
-                    and node.time - closed_node.time == 1
-                ):
-                    neighbors.append(closed_node)
-            # set shortest neighbor which has min g_score in neighbors
-            shortest_neighbor = None
-            for neighbor in neighbors:
-                if (
-                    shortest_neighbor is None
-                    or neighbor.g_score < shortest_neighbor.g_score
-                ):
-                    shortest_neighbor = neighbor
-            if shortest_neighbor:
-                node.parent = shortest_neighbor
-                shortest_neighbor.children.append(node)
-            else:
-                open_set.remove(node)
-                if node in focal_set:
-                    focal_set.remove(node)
+            open_set.remove(node)
+            if node in focal_set:
+                focal_set.remove(node)
         else:
             closed_set.remove(node)
+            if not node.children:
+                open_set.add(node)
+                node.parent.children.append(node)
 
     def visualize(self, conflict_node, node, open_set, closed_set, agent_id):
         # Clear the plot
