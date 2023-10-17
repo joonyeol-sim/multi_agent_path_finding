@@ -61,6 +61,11 @@ class ConflictBasedSearchDP:
         # put root node into the priority queue
         heapq.heappush(self.open_set, root_node)
         ct_size = 0
+        planning_avg_time = 0
+        pruning_avg_time = 0
+        copy_avg_time = 0
+        generate_avg_time = 0
+
         while self.open_set:
             # pop the node with the lowest cost
             cur_node = heapq.heappop(self.open_set)
@@ -74,7 +79,7 @@ class ConflictBasedSearchDP:
             if not conflict:
                 return cur_node.solution
 
-            start_time = time.time()
+            generate_start_time = time.time()
             # if there is a conflict, generate two new nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
@@ -87,6 +92,7 @@ class ConflictBasedSearchDP:
                 ):
                     continue
                 # generate child node from the current node
+                copy_start_time = time.time()
                 new_node = CTNode(
                     constraints=deepcopy(cur_node.constraints),
                     solution=deepcopy(cur_node.solution),
@@ -94,12 +100,13 @@ class ConflictBasedSearchDP:
                     individual_planners=list(),
                 )
                 new_node.individual_planners = copy(cur_node.individual_planners)
-                deepcopy_start_time = time.time()
                 new_node.individual_planners[agent_id] = deepcopy(
                     cur_node.individual_planners[agent_id]
                 )
-                print(f"Deepcopy time: {time.time() - deepcopy_start_time}")
+                copy_avg_time += time.time() - copy_start_time
+                # print(f"Deepcopy time: {time.time() - deepcopy_start_time}")
 
+                pruning_start_time = time.time()
                 # generate constraint from the conflict
                 new_constraint = self.generate_constraint_from_conflict(
                     agent_id, conflict
@@ -134,16 +141,25 @@ class ConflictBasedSearchDP:
                 )
                 pruning_node.parent.children.remove(pruning_node)
                 pruning_node.parent = None
+                pruning_avg_time += time.time() - pruning_start_time
+                # print(f"Pruning time: {time.time() - pruning_start_time}")
 
+                plan_start_time = time.time()
                 new_node.solution[agent_id] = new_node.individual_planners[
                     agent_id
                 ].plan(constraints=new_node.constraints[agent_id])
+                # print(f"Plan time: {time.time() - plan_start_time}")
                 if not new_node.solution[agent_id]:
                     continue
                 new_node.cost = self.calculate_cost(new_node.solution)
                 heapq.heappush(self.open_set, new_node)
                 ct_size += 1
-            print(f"Time elapsed: {time.time() - start_time}")
+                planning_avg_time += time.time() - plan_start_time
+            generate_avg_time += time.time() - generate_start_time
+            print(f"Planning avg time: {planning_avg_time / ct_size}")
+            print(f"Pruning avg time: {pruning_avg_time / ct_size}")
+            print(f"Copy avg time: {copy_avg_time / ct_size}")
+            print(f"Generate avg time: {generate_avg_time / ct_size}")
         return None
 
     def prune_successor(self, node, open_set, closed_set):
