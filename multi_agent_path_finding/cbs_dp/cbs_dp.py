@@ -93,16 +93,7 @@ class ConflictBasedSearchDP:
                     continue
                 # generate child node from the current node
                 copy_start_time = time.time()
-                new_node = CTNode(
-                    constraints=deepcopy(cur_node.constraints),
-                    solution=deepcopy(cur_node.solution),
-                    cost=cur_node.cost,
-                    individual_planners=list(),
-                )
-                new_node.individual_planners = copy(cur_node.individual_planners)
-                new_node.individual_planners[agent_id] = deepcopy(
-                    cur_node.individual_planners[agent_id]
-                )
+                new_node = cur_node.deepcopy(agent_id)
                 copy_avg_time += time.time() - copy_start_time
                 # print(f"Deepcopy time: {time.time() - deepcopy_start_time}")
 
