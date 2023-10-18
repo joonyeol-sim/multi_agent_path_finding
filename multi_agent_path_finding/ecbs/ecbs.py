@@ -115,6 +115,8 @@ class EnhancedConflictBasedSearch:
             # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
 
+            print(f"Conflict: {conflict}")
+
             # if there is no conflict, return the solution
             if not conflict:
                 return cur_node.solution, min_lower_bound

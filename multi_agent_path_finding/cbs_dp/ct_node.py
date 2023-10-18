@@ -8,29 +8,23 @@ from multi_agent_path_finding.stastar_dp.stastar_dp import SpaceTimeAstarDP
 from multi_agent_path_finding.stastar_dp.node import Node
 
 
+@dataclass
 class CTNode:
-
-    def __init__(
-        self,
-        constraints: Dict[int, List[Constraint]],
-        solution: List[List[Tuple[Point, int]]],
-        cost: int = 0,
-        individual_planners: List[SpaceTimeAstarDP] = None,
-    ):
-        self.constraints: Dict[int, List[Constraint]] = constraints
-        self.solution: List[List[Tuple[Point, int]]] = solution
-        self.cost: int = cost
-        self.individual_planners: List[SpaceTimeAstarDP] = individual_planners
+    constraints: Dict[int, List[Constraint]]
+    solution: List[List[Tuple[Point, int]]]
+    cost: int = 0
+    individual_planners: List[SpaceTimeAstarDP] = None
 
     def __lt__(self, other):
         return self.cost < other.cost
 
-    def __eq__(self, other):
-        # check if the constraints are the same
-        return self.solution == other.solution and self.cost == other.cost
-
     def __hash__(self):
         return hash(str(self.solution) + str(self.cost))
+
+    def __eq__(self, other):
+        if isinstance(other, CTNode):
+            return self.solution == other.solution and self.cost == other.cost
+        return False
 
     def deepcopy(self, agent_id: int = None):
         return CTNode(
