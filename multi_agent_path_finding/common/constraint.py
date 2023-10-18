@@ -15,6 +15,11 @@ class VertexConstraint(Constraint):
     time: int
     point: Point
 
+    def __eq__(self, other):
+        if isinstance(other, VertexConstraint):
+            return self.time == other.time and self.point == other.point
+        return False
+
 
 @dataclass
 class EdgeConstraint(Constraint):
@@ -22,3 +27,8 @@ class EdgeConstraint(Constraint):
     # The first point is the previous point
     # The second point is the next point
     points: Tuple[Point, Point]
+
+    def __eq__(self, other):
+        if isinstance(other, EdgeConstraint):
+            return self.times == other.times and self.points == other.points
+        return False
