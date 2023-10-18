@@ -1,7 +1,8 @@
+import heapq
+import time
 from copy import deepcopy
 from itertools import combinations
-from typing import List, Tuple, Set
-import heapq
+from typing import List, Tuple
 
 from multi_agent_path_finding.common.conflict import (
     Conflict,
@@ -50,13 +51,9 @@ class EnhancedConflictBasedSearch:
 
         for start_point, goal_point in zip(start_points, goal_points):
             if env.dimension != len(start_point.__dict__.keys()):
-                raise ValueError(
-                    f"Dimension does not match the length of start: {start_point}"
-                )
+                raise ValueError(f"Dimension does not match the length of start: {start_point}")
             if env.dimension != len(goal_point.__dict__.keys()):
-                raise ValueError(
-                    f"Dimension does not match the length of goal: {goal_point}"
-                )
+                raise ValueError(f"Dimension does not match the length of goal: {goal_point}")
             if not self.is_valid_point(start_point, 0):
                 raise ValueError(f"Start point is not valid: {start_point}")
             if not self.is_valid_point(goal_point, 0):
@@ -93,61 +90,63 @@ class EnhancedConflictBasedSearch:
 
         # set min_lower_bound to the lower bound of root node
         min_lower_bound = root_node.lower_bound
+
+        ct_size = 1
+        planning_avg_time = 0
+        pruning_avg_time = 0
+        copy_avg_time = 0
+        generate_avg_time = 0
+
         while self.open_set:
             # update focal set if min_lower_bound has increased
             new_min_lower_bound = min([node.lower_bound for node in self.open_set])
             if min_lower_bound < new_min_lower_bound:
                 for node in self.open_set:
-                    if (
-                        self.w * min_lower_bound
-                        <= node.cost
-                        <= self.w * new_min_lower_bound
-                    ):
-                        self.focal_set.add(node)
+                    if self.w * min_lower_bound < node.cost <= self.w * new_min_lower_bound:
+                        self.focal_set.append(node)
                 min_lower_bound = new_min_lower_bound
 
             # select node from focal set
             cur_node = heapq.heappop(self.focal_set)
             print(f"Current node: {cur_node.focal_heuristic}, {cur_node.cost}")
+            print(f"CT size: {ct_size}")
             self.open_set.remove(cur_node)
 
             # find the first conflict
             conflict = self.find_first_conflict(cur_node.solution)
+
             # if there is no conflict, return the solution
             if not conflict:
                 return cur_node.solution, min_lower_bound
 
+            generate_start_time = time.time()
             # if there is a conflict, generate two child nodes
             for agent_id in conflict.agent_ids:
                 # if the agent has already passed the conflict time, ignore it
-                if (
-                    type(conflict) == VertexConflict
-                    and len(cur_node.solution[agent_id]) <= conflict.time
-                ) or (
-                    type(conflict) == EdgeConflict
-                    and len(cur_node.solution[agent_id]) <= conflict.times[1]
+                if (type(conflict) == VertexConflict and len(cur_node.solution[agent_id]) <= conflict.time) or (
+                    type(conflict) == EdgeConflict and len(cur_node.solution[agent_id]) <= conflict.times[1]
                 ):
                     continue
                 # generate child node from the current node
+                copy_start_time = time.time()
                 new_node = deepcopy(cur_node)
+                copy_avg_time += time.time() - copy_start_time
 
                 # generate constraint from the conflict
-                new_constraint = self.generate_constraint_from_conflict(
-                    agent_id, conflict
-                )
+                new_constraint = self.generate_constraint_from_conflict(agent_id, conflict)
 
                 # add constraint to the child node
                 new_node.constraints.setdefault(agent_id, []).append(new_constraint)
 
+                plan_start_time = time.time()
                 # update reservation table
                 self.env.reservation_table = new_node.solution
                 self.env.reservation_table[agent_id] = []
                 # generate new path for the agent that has the conflict
-                new_node.solution[agent_id], new_f_min = self.individual_planners[
-                    agent_id
-                ].plan(constraints=new_node.constraints[agent_id])
-                if not new_node.solution[agent_id]:
+                result = self.individual_planners[agent_id].plan(constraints=new_node.constraints[agent_id])
+                if not result:
                     continue
+                new_node.solution[agent_id], new_f_min = result
 
                 # update cost, f_mins, lower_bound, and focal_heuristic
                 new_node.cost = self.calculate_cost(new_node.solution)
@@ -161,12 +160,18 @@ class EnhancedConflictBasedSearch:
                 # add the child node to the focal set if its lower bound is lower than w * min_lower_bound
                 if new_node.cost <= self.w * min_lower_bound:
                     heapq.heappush(self.focal_set, new_node)
+
+                ct_size += 1
+                planning_avg_time += time.time() - plan_start_time
+            generate_avg_time += time.time() - generate_start_time
+            print(f"Planning avg time: {planning_avg_time / ct_size}")
+            print(f"Pruning avg time: {pruning_avg_time / ct_size}")
+            print(f"Copy avg time: {copy_avg_time / ct_size}")
+            print(f"Generate avg time: {generate_avg_time / ct_size}")
         return None
 
     @staticmethod
-    def generate_constraint_from_conflict(
-        agent_id: int, conflict: Conflict
-    ) -> Constraint:
+    def generate_constraint_from_conflict(agent_id: int, conflict: Conflict) -> Constraint:
         if isinstance(conflict, VertexConflict):
             return VertexConstraint(
                 agent_id=agent_id,

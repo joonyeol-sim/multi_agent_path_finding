@@ -41,7 +41,7 @@ class CTNode:
             env=self.individual_planners[agent_id].env,
         )
 
-        new_individual_planner.open_set.clear()
+        new_individual_planner.open_set.remove(new_individual_planner.start_node)
 
         self.post_order_copy(
             self.individual_planners[agent_id].start_node,

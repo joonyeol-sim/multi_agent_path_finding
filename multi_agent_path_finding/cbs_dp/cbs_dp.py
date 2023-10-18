@@ -21,9 +21,7 @@ from multi_agent_path_finding.stastar_dp.stastar_dp import SpaceTimeAstarDP
 
 
 class ConflictBasedSearchDP:
-    def __init__(
-        self, start_points: List[Point], goal_points: List[Point], env: Environment
-    ):
+    def __init__(self, start_points: List[Point], goal_points: List[Point], env: Environment):
         # check if the length of start_points and goal_points are the same
         if len(start_points) != len(goal_points):
             raise ValueError(
@@ -99,9 +97,7 @@ class ConflictBasedSearchDP:
 
                 pruning_start_time = time.time()
                 # generate constraint from the conflict
-                new_constraint = self.generate_constraint_from_conflict(
-                    agent_id, conflict
-                )
+                new_constraint = self.generate_constraint_from_conflict(agent_id, conflict)
 
                 # pruning node from the new constraint
                 pruning_node = None
@@ -114,10 +110,7 @@ class ConflictBasedSearchDP:
                     pruning_time = new_node.solution[agent_id][conflict.times[1]][1]
 
                 for closed_node in new_node.individual_planners[agent_id].closed_set:
-                    if (
-                        closed_node.point == pruning_point
-                        and closed_node.time == pruning_time
-                    ):
+                    if closed_node.point == pruning_point and closed_node.time == pruning_time:
                         pruning_node = closed_node
                         break
 
@@ -136,9 +129,9 @@ class ConflictBasedSearchDP:
                 # print(f"Pruning time: {time.time() - pruning_start_time}")
 
                 plan_start_time = time.time()
-                new_node.solution[agent_id] = new_node.individual_planners[
-                    agent_id
-                ].plan(constraints=new_node.constraints[agent_id])
+                new_node.solution[agent_id] = new_node.individual_planners[agent_id].plan(
+                    constraints=new_node.constraints[agent_id]
+                )
                 # print(f"Plan time: {time.time() - plan_start_time}")
                 if not new_node.solution[agent_id]:
                     continue
@@ -170,9 +163,7 @@ class ConflictBasedSearchDP:
             #     node.parent = None
 
     @staticmethod
-    def generate_constraint_from_conflict(
-        agent_id: int, conflict: Conflict
-    ) -> Constraint:
+    def generate_constraint_from_conflict(agent_id: int, conflict: Conflict) -> Constraint:
         if isinstance(conflict, VertexConflict):
             return VertexConstraint(
                 agent_id=agent_id,

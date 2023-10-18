@@ -16,9 +16,7 @@ ax = fig.add_subplot(111, projection="3d")
 
 
 class SpaceTimeAstarEpsilon:
-    def __init__(
-        self, start_point: Point, goal_point: Point, env: Environment, w: float
-    ):
+    def __init__(self, start_point: Point, goal_point: Point, env: Environment, w: float):
         self.env = env
         self.start_point = start_point
         self.goal_point = goal_point
@@ -29,13 +27,9 @@ class SpaceTimeAstarEpsilon:
         self.closed_set: Set[Node] = set()
 
         if env.dimension != len(start_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of start: {start_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of start: {start_point}")
         if env.dimension != len(goal_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of goal: {goal_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of goal: {goal_point}")
         if not self.is_valid_point(start_point, 0):
             raise ValueError(f"Start point is not valid: {start_point}")
         if not self.is_valid_point(goal_point, 0):
@@ -43,9 +37,7 @@ class SpaceTimeAstarEpsilon:
         if not w:
             raise ValueError(f"w must be given")
 
-    def plan(
-        self, constraints: List[Constraint] = None
-    ) -> Tuple[List[Tuple[Point, int]], int]:
+    def plan(self, constraints: List[Constraint] = None) -> Tuple[List[Tuple[Point, int]], int]:
         self.open_set.clear()
         self.focal_set.clear()
         self.closed_set.clear()
@@ -66,7 +58,7 @@ class SpaceTimeAstarEpsilon:
             new_min_f_score = min([node.f_score for node in self.open_set])
             if min_f_score < new_min_f_score:
                 for node in self.open_set:
-                    if self.w * min_f_score <= node.f_score <= self.w * new_min_f_score:
+                    if self.w * min_f_score < node.f_score <= self.w * new_min_f_score:
                         self.focal_set.add(node)
                 min_f_score = new_min_f_score
 
@@ -249,10 +241,7 @@ class SpaceTimeAstarEpsilon:
             other_prev_point, other_prev_time = path[next_node.time - 1]
             other_next_point, other_next_time = path[next_node.time]
 
-            if (
-                prev_node.point == other_next_point
-                and next_node.point == other_prev_point
-            ):
+            if prev_node.point == other_next_point and next_node.point == other_prev_point:
                 num_of_conflicts += 1
         return num_of_conflicts
 
@@ -264,15 +253,11 @@ class SpaceTimeAstarEpsilon:
             node = node.parent
         return path[::-1]
 
-    def get_neighbors(
-        self, node: Node, constraints: List[Constraint] = None
-    ) -> List[Node]:
+    def get_neighbors(self, node: Node, constraints: List[Constraint] = None) -> List[Node]:
         neighbors: List[Node] = []
         # move action
         for neighbor_point in node.point.get_neighbor_points():
-            if self.is_valid_point(
-                neighbor_point, node.time + 1
-            ) and self.is_valid_given_constraints(
+            if self.is_valid_point(neighbor_point, node.time + 1) and self.is_valid_given_constraints(
                 node.point, neighbor_point, node.time, node.time + 1, constraints
             ):
                 neighbors.append(Node(neighbor_point, node.time + 1))

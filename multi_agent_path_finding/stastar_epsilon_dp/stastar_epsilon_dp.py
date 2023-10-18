@@ -1,5 +1,7 @@
 from typing import List, Set, Tuple
 
+import matplotlib.pyplot as plt
+
 from multi_agent_path_finding.common.constraint import (
     Constraint,
     VertexConstraint,
@@ -8,16 +10,13 @@ from multi_agent_path_finding.common.constraint import (
 from multi_agent_path_finding.common.environment import Environment
 from multi_agent_path_finding.common.point import Point
 from multi_agent_path_finding.stastar_epsilon_dp.node import Node
-import matplotlib.pyplot as plt
 
 fig = plt.figure()
 ax = fig.add_subplot(111, projection="3d")
 
 
 class SpaceTimeAstarEpsilonDP:
-    def __init__(
-        self, start_point: Point, goal_point: Point, env: Environment, w: float
-    ):
+    def __init__(self, start_point: Point, goal_point: Point, env: Environment, w: float):
         self.env = env
         self.start_point = start_point
         self.goal_point = goal_point
@@ -39,13 +38,9 @@ class SpaceTimeAstarEpsilonDP:
         self.min_f_score = self.start_node.f_score
 
         if env.dimension != len(start_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of start: {start_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of start: {start_point}")
         if env.dimension != len(goal_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of goal: {goal_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of goal: {goal_point}")
         if not self.is_valid_point(start_point, 0):
             raise ValueError(f"Start point is not valid: {start_point}")
         if not self.is_valid_point(goal_point, 0):
@@ -53,22 +48,13 @@ class SpaceTimeAstarEpsilonDP:
         if not w:
             raise ValueError(f"w must be given")
 
-    def plan(
-        self, constraints: List[Constraint] = None
-    ) -> Tuple[List[Tuple[Point, int]], int]:
-        if constraints is not None:
-            self.min_f_score = min([node.f_score for node in self.open_set])
-
+    def plan(self, constraints: List[Constraint] = None) -> Tuple[List[Tuple[Point, int]], int]:
         while self.open_set:
             # update focal set if min_f_score has increased
             new_min_f_score = min([node.f_score for node in self.open_set])
             if self.min_f_score < new_min_f_score:
                 for node in self.open_set:
-                    if (
-                        self.w * self.min_f_score
-                        <= node.f_score
-                        <= self.w * new_min_f_score
-                    ):
+                    if self.w * self.min_f_score < node.f_score <= self.w * new_min_f_score:
                         self.focal_set.add(node)
                 self.min_f_score = new_min_f_score
 
@@ -90,10 +76,8 @@ class SpaceTimeAstarEpsilonDP:
 
                 if neighbor not in self.open_set:
                     self.open_set.add(neighbor)
-                    # If neighbor is not in open set, we set its parent
                     neighbor.parent = current
                     current.children.append(neighbor)
-
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
@@ -106,12 +90,9 @@ class SpaceTimeAstarEpsilonDP:
                         self.focal_set.add(neighbor)
 
                 if current.g_score + 1 < neighbor.g_score:
-                    # If neighbor is in open set, we remove it from its parent's children
                     neighbor.parent.children.remove(neighbor)
-                    # update neighbor's parent
                     neighbor.parent = current
                     current.children.append(neighbor)
-
                     neighbor.g_score = current.g_score + 1
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
@@ -230,7 +211,7 @@ class SpaceTimeAstarEpsilonDP:
         ax.legend()
 
         # Show the plot
-        plt.pause(0.01)
+        plt.pause(0.1)
 
     def heuristic(self, node) -> int:
         # return manhattan distance
@@ -259,10 +240,7 @@ class SpaceTimeAstarEpsilonDP:
             other_prev_point, other_prev_time = path[next_node.time - 1]
             other_next_point, other_next_time = path[next_node.time]
 
-            if (
-                prev_node.point == other_next_point
-                and next_node.point == other_prev_point
-            ):
+            if prev_node.point == other_next_point and next_node.point == other_prev_point:
                 num_of_conflicts += 1
         return num_of_conflicts
 
@@ -274,18 +252,15 @@ class SpaceTimeAstarEpsilonDP:
             node = node.parent
         return path[::-1]
 
-    def get_neighbors(
-        self, node: Node, constraints: List[Constraint] = None
-    ) -> List[Node]:
+    def get_neighbors(self, node: Node, constraints: List[Constraint] = None) -> List[Node]:
         neighbors: List[Node] = []
         # move action
         for neighbor_point in node.point.get_neighbor_points():
-            if self.is_valid_point(
-                neighbor_point, node.time + 1
-            ) and self.is_valid_given_constraints(
+            if self.is_valid_point(neighbor_point, node.time + 1) and self.is_valid_given_constraints(
                 node.point, neighbor_point, node.time, node.time + 1, constraints
             ):
                 neighbors.append(Node(neighbor_point, node.time + 1))
+
         return neighbors
 
     def is_valid_point(self, point: Point, time: int) -> bool:
