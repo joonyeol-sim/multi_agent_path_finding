@@ -10,6 +10,9 @@ from multi_agent_path_finding.common.constraint import (
 from multi_agent_path_finding.stastar.node import Node
 import matplotlib.pyplot as plt
 
+fig = plt.figure()
+ax = fig.add_subplot(111, projection="3d")
+
 
 class SpaceTimeAstar:
     def __init__(self, start_point: Point, goal_point: Point, env: Environment):
@@ -17,21 +20,15 @@ class SpaceTimeAstar:
         self.start_point = start_point
         self.goal_point = goal_point
         if env.dimension != len(start_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of start: {start_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of start: {start_point}")
         if env.dimension != len(goal_point.__dict__.keys()):
-            raise ValueError(
-                f"Dimension does not match the length of goal: {goal_point}"
-            )
+            raise ValueError(f"Dimension does not match the length of goal: {goal_point}")
         if not self.is_valid_point(start_point, 0):
             raise ValueError(f"Start point is not valid: {start_point}")
         if not self.is_valid_point(goal_point, 0):
             raise ValueError(f"Goal point is not valid: {goal_point}")
 
-    def plan(
-        self, constraints: List[Constraint] = None
-    ) -> List[Tuple[Point, int]] | None:
+    def plan(self, constraints: List[Constraint] = None) -> List[Tuple[Point, int]] | None:
         open_set: Set[Node] = set()
         closed_set: Set[Node] = set()
         open_set.add(Node(self.start_point, 0))
@@ -61,18 +58,18 @@ class SpaceTimeAstar:
                     neighbor.h_score = self.heuristic(neighbor)
                     neighbor.f_score = neighbor.g_score + neighbor.h_score
 
-            # self.visualize(current, open_set, closed_set)
+            self.visualize(current, open_set, closed_set)
 
         return None
 
     def visualize(self, node, open_set: Set[Node], closed_set: Set[Node]):
         # Clear the plot
-        self.ax.clear()
+        ax.clear()
         time_limit = max(10, max([node.time for node in open_set | closed_set]))
 
         # Plot obstacles
         for time in range(time_limit):
-            self.ax.scatter(
+            ax.scatter(
                 [obstacle.point.x for obstacle in self.env.obstacles],
                 [obstacle.point.y for obstacle in self.env.obstacles],
                 [time for obstacle in self.env.obstacles],
@@ -81,7 +78,7 @@ class SpaceTimeAstar:
             )
 
         # Plot open set
-        self.ax.scatter(
+        ax.scatter(
             [node.point.x for node in open_set],
             [node.point.y for node in open_set],
             [node.time for node in open_set],
@@ -91,7 +88,7 @@ class SpaceTimeAstar:
         )
 
         # Plot closed set
-        self.ax.scatter(
+        ax.scatter(
             [node.point.x for node in closed_set],
             [node.point.y for node in closed_set],
             [node.time for node in closed_set],
@@ -101,7 +98,7 @@ class SpaceTimeAstar:
         )
 
         # Plot current node
-        self.ax.scatter(
+        ax.scatter(
             node.point.x,
             node.point.y,
             node.time,
@@ -111,7 +108,7 @@ class SpaceTimeAstar:
         )
 
         # Plot start and goal points without (x, o) markers
-        self.ax.scatter(
+        ax.scatter(
             self.start_point.x,
             self.start_point.y,
             0,
@@ -120,7 +117,7 @@ class SpaceTimeAstar:
             label="Start Point",
         )
 
-        self.ax.scatter(
+        ax.scatter(
             self.goal_point.x,
             self.goal_point.y,
             0,
@@ -132,7 +129,7 @@ class SpaceTimeAstar:
         # Plot tree edges
         for node in open_set | closed_set:
             if node.parent is not None:
-                self.ax.plot(
+                ax.plot(
                     [node.point.x, node.parent.point.x],
                     [node.point.y, node.parent.point.y],
                     [node.time, node.parent.time],
@@ -140,15 +137,15 @@ class SpaceTimeAstar:
                 )
 
         # Setting labels and title
-        self.ax.set_xlabel("X")
-        self.ax.set_ylabel("Y")
-        self.ax.set_zlabel("T")
-        self.ax.set_xlim([0, self.env.space_limit[0]])
-        self.ax.set_ylim([0, self.env.space_limit[1]])
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("T")
+        ax.set_xlim([0, self.env.space_limit[0]])
+        ax.set_ylim([0, self.env.space_limit[1]])
         # time_limit = 10
-        self.ax.set_zlim([0, time_limit])
-        self.ax.set_title("3D Grid Map Visualization")
-        self.ax.legend()
+        ax.set_zlim([0, time_limit])
+        ax.set_title("3D Grid Map Visualization")
+        ax.legend()
 
         # Show the plot
         plt.pause(0.5)
@@ -165,9 +162,7 @@ class SpaceTimeAstar:
             node = node.parent
         return path[::-1]
 
-    def get_neighbors(
-        self, node: Node, constraints: List[Constraint] = None
-    ) -> List[Node]:
+    def get_neighbors(self, node: Node, constraints: List[Constraint] = None) -> List[Node]:
         neighbors: List[Node] = []
         # move action
         for neighbor_point in node.point.get_neighbor_points():

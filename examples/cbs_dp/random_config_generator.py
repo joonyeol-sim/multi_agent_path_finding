@@ -29,9 +29,7 @@ def dynamic_obstacle_generator(dimension, space_limit, num, start_points, goal_p
         for j in range(dimension):
             start_time = random.randint(0, max_time_range)
             end_time = random.randint(start_time, max_time_range)
-            rand_point = [
-                random.randint(0, space_limit[i] - 1) for i in range(dimension)
-            ]
+            rand_point = [random.randint(0, space_limit[i] - 1) for i in range(dimension)]
             generate_flag = True
             for start_point, goal_point in zip(start_points, goal_points):
                 if rand_point == start_point or rand_point == goal_point:
@@ -85,6 +83,6 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", type=str, help="Output file path")
     args = parser.parse_args()
 
-    config = config_generator(2, [100, 100], 75, 0, 0)
+    config = config_generator(2, [32, 32], 100, 0, 0)
     with open(args.output, "w") as f:
         yaml.dump(config, f)
